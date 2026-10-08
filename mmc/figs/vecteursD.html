@@ -13,33 +13,30 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 :root[data-theme="dark"]{--bg:#15171a;--ink:#eee;--panel:#22262b;--cyan:#22d3ee;--red:#ff6b6b;--green:#6fcf73;--blue:#64b5f6;--mut:#aaa}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
-#title{padding:8px 12px 4px;text-align:center;position:relative}
 #tg{font:inherit;font-size:13px;color:var(--ink);background:var(--bg);border:1px solid var(--mut);border-radius:6px;padding:3px 8px;cursor:pointer;white-space:nowrap;flex:none}
-#panel.c>:not(#info){display:none!important}
-@media (max-width:600px){#title{display:none}#cr{display:block}#info{font-size:13px}#panel{padding:6px 10px;grid-template-columns:repeat(2,1fr);font-size:13px}.lb{font-size:15px}}
-#title h1{margin:0;font-size:clamp(17px,4.5vw,22px)}
-#title p{margin:2px 0 0;font-size:13px;color:var(--mut)}
-#title a{color:var(--cyan);text-decoration:none}
+#panel.c{display:none}
 #panel{background:var(--panel);padding:8px 12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px 16px;font-size:14px}
 #panel label{display:flex;align-items:center;gap:6px}
 #panel input{flex:1;min-width:60px}
 #panel b{font-family:Georgia,serif;font-style:italic;width:22px}
 #panel output{width:38px;text-align:right;font-variant-numeric:tabular-nums}
 #panel select{flex:1;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--mut);border-radius:4px;padding:2px 4px}
-#cr{order:-1;display:none;grid-column:1/-1;font-size:13px;color:var(--mut)}
-#cr h1{margin:0;font-size:15px;color:var(--ink)}
-#cr p{margin:2px 0 0}
-#cr a{color:var(--cyan);text-decoration:none}
-#info{grid-column:1/-1;order:-2;display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--mut)}
+#info{padding:4px 12px;color:var(--mut);font-size:14px;background:var(--panel)}
+#top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 12px;font-size:14px;background:var(--panel)}
+#ttl{font-weight:600}
+#ttl small{font-weight:400;color:var(--mut);font-size:12px}
+#ttl a{color:var(--cyan);text-decoration:none}
 #wrap{position:relative;flex:1;min-height:0;overflow:hidden}
 canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 .lb{position:absolute;left:0;top:0;font:italic 17px Georgia,serif;pointer-events:none;white-space:nowrap;transform:translate(-50%,-50%)}
 .lb sub{font-size:12px}
+@media (max-width:600px){#panel{padding:6px 10px;grid-template-columns:repeat(2,1fr);font-size:13px}.lb{font-size:15px}#top{padding:4px 10px}#ttl{font-size:13px}#info{font-size:13px;padding:3px 10px}}
 </style>
 </head>
 <body>
-<header id="title"><h1>Représentation d'un vecteur 3D</h1><p>A. Seghir (<a href="https://a-seghir.blogpost.com/mmc" target="_blank" rel="noopener">a-seghir.blogpost.com/mmc</a>)</p></header>
-<div id="panel"></div>
+<div id="top"><span id="ttl">Représentation d'un vecteur 3D <small>(figure 1.2 du fichier <a href="https://a-seghir.blogspot.com/mmc/chap2.pdf" target="_blank" rel="noopener">a-seghir.blogspot.com/mmc/chap2.pdf</a>)</small></span><button id="tg" type="button">Paramètres</button></div>
+<div id="panel" class="c"></div>
+<div id="info"><span id="iv"></span></div>
 <div id="wrap"><canvas id="c"></canvas></div>
 <script>
 const SL=[['A','x',3,7],['A','y',1,6.5],['A','z',1.25,3.5],['B','x',6,7],['B','y',4.5,6.5],['B','z',2.25,3.5]];
@@ -55,10 +52,7 @@ SL.forEach(([p,c,v,m])=>{
 const opts=document.createElement('div');opts.style.display='contents';
 opts.innerHTML=`<label>Thème <select id="th"><option value="auto">Auto</option><option value="light">Clair</option><option value="dark">Sombre</option></select></label>
 <label>Projection <select id="pj"><option value="persp">Perspective</option><option value="ortho">Orthographique</option></select></label>`;
-const cr=document.createElement('div');cr.id='cr';
-cr.innerHTML=`<h1>Représentation d'un vecteur 3D</h1><p>A. Seghir (<a href="https://a-seghir.blogpost.com/mmc" target="_blank" rel="noopener">a-seghir.blogpost.com/mmc</a>)</p>`;
-panel.appendChild(cr);panel.appendChild(opts);
-const info=document.createElement('div');info.id='info';info.innerHTML='<span id="iv"></span><button id="tg" type="button">Paramètres</button>';panel.appendChild(info);
+panel.appendChild(opts);
 const th=document.getElementById('th'),pj=document.getElementById('pj');
 const mq=matchMedia('(prefers-color-scheme: dark)'),qp=new URLSearchParams(location.search);
 let saved=null;try{saved=localStorage.getItem('v3d-theme')}catch(e){}
@@ -70,7 +64,7 @@ mq.addEventListener('change',()=>{if(th.value==='auto')applyTheme()});
 applyTheme();
 pj.onchange=()=>{cam=pj.value==='ortho'?ortho:persp};
 const tg=document.getElementById('tg');
-function setC(c){panel.classList.toggle('c',c);tg.textContent=c?'Paramètres':'Masquer'}
+function setC(c){panel.classList.toggle('c',c);tg.textContent=c?'Afficher les paramètres':'Masquer les paramètres'}
 tg.onclick=()=>setC(!panel.classList.contains('c'));
 setC(innerWidth<600);
 

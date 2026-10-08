@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Notes de cours et ressources pédagogiques — Abdelghani SEGHIR</title>
+<meta name="description" content="Notes de cours (Python, MMC, MEF, MNA), visualisations 3D interactives et projets. Abdelghani SEGHIR, Université de Bejaia.">
+<style>
+:root{
+  --bg:#dfeaf2; --tint:#a9cde2; --rx:#dc2626; --gy:#15803d; --bz:#2563eb; --surface:#ffffff; --ink:#122033; --muted:#475569;
+  --line:#b9c9d6; --accent:#0b6e8a; --accent-ink:#ffffff; --soft:#e4f1f5; --warn:#8a5a0b;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0e1621; --tint:#173247; --rx:#f87171; --gy:#4ade80; --bz:#60a5fa; --surface:#152130; --ink:#e8eef5; --muted:#9aa8ba;
+    --line:#26364a; --accent:#5cc3de; --accent-ink:#0e1621; --soft:#17303c; --warn:#e0b25c;}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:116px}
+html,body{background:var(--bg)}
+.page{min-height:100vh;background:linear-gradient(180deg,var(--tint) 0,var(--bg) 900px) no-repeat,var(--bg)}
+body{margin:0;color:var(--ink);font-family:var(--sans);line-height:1.6;
+  padding-bottom:env(safe-area-inset-bottom,0)}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:4px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* En-tête */
+header{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0)}
+.nav{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 16px;min-height:60px;padding-top:6px;padding-bottom:6px}
+.id{display:flex;flex-direction:column;line-height:1.35;margin:0;font-size:1rem;font-weight:400}
+.by{font-size:clamp(.92rem,2vw,1.05rem);color:var(--muted)}
+.brand{font-family:var(--serif);font-weight:700;font-size:clamp(1.1rem,2.6vw,1.4rem);text-decoration:none}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav a{padding:6px 12px;border-radius:999px;color:var(--muted);text-decoration:none;font-size:.95rem}
+nav a:hover{background:var(--soft);color:var(--ink)}
+
+/* Hero */
+.hero{display:grid;place-items:center;padding:36px 0 40px}
+.dd{position:relative}
+.dd>button{font:inherit;font-size:.95rem;padding:6px 12px;border:0;border-radius:999px;background:none;color:var(--muted);cursor:pointer}
+.dd>button:hover,.dd.open>button{background:var(--soft);color:var(--ink)}
+.menu{display:none;position:absolute;top:100%;left:0;min-width:270px;margin:0;padding:6px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.14)}
+.dd.open .menu,.dd:hover .menu{display:block}
+.menu a{display:block;padding:8px 12px;border-radius:6px;color:var(--ink)}
+.menu small{color:var(--muted);margin-left:6px}
+
+/* Objet 3D du hero (CSS pur) */
+.stage{position:relative;height:300px;display:grid;place-items:center;perspective:900px}
+.cube{--s:150px;position:relative;width:var(--s);height:var(--s);transform-style:preserve-3d;
+  animation:spin 18s linear infinite}
+.cube.inner{--s:72px;position:absolute;animation-duration:11s;animation-direction:reverse}
+.face{position:absolute;inset:0;border:1.5px solid var(--accent);background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.f1{transform:translateZ(calc(var(--s)/2))}
+.f2{transform:rotateY(180deg) translateZ(calc(var(--s)/2))}
+.f3{transform:rotateY(90deg) translateZ(calc(var(--s)/2))}
+.f4{transform:rotateY(-90deg) translateZ(calc(var(--s)/2))}
+.f5{transform:rotateX(90deg) translateZ(calc(var(--s)/2))}
+.f6{transform:rotateX(-90deg) translateZ(calc(var(--s)/2))}
+.core{position:absolute;inset:0;display:grid;place-items:center;transform-style:preserve-3d}
+.ax{position:absolute;left:50%;top:50%;width:calc(var(--s)*.8);height:3px;margin-top:-1.5px;border-radius:2px;transform-origin:0 50%}
+.ax::after{content:"";position:absolute;right:-4px;top:-3px;width:9px;height:9px;border-radius:50%;background:inherit}
+.ax.x{background:var(--rx)}
+.ax.y{background:var(--gy);transform:rotateY(90deg)}
+.ax.z{background:var(--bz);transform:rotateZ(-90deg)}
+/* Grand cube : axes x1 (rouge), x2 (vert), x3 (bleu) le long des arêtes du coin bas-avant-gauche */
+.stage>.cube{animation:none;transform:rotateX(-24deg) rotateY(35deg)}
+.cube>.ax{width:calc(var(--s)*1.3)}
+.cube>.ax.x{transform:translate3d(calc(var(--s)*-.5),calc(var(--s)*.5),calc(var(--s)*.5))}
+.cube>.ax.y{transform:translate3d(calc(var(--s)*-.5),calc(var(--s)*.5),calc(var(--s)*.5)) rotateY(90deg)}
+.cube>.ax.z{transform:translate3d(calc(var(--s)*-.5),calc(var(--s)*.5),calc(var(--s)*.5)) rotateZ(-90deg)}
+.lab{position:absolute;left:50%;top:50%;z-index:2;font-family:var(--serif);font-style:italic;font-weight:700;font-size:1.25rem;line-height:1;pointer-events:none;white-space:nowrap}
+.lab sub{font-size:.7em;font-style:normal;vertical-align:-.25em}
+@keyframes spin{from{transform:rotateX(-24deg) rotateY(0)}to{transform:rotateX(-24deg) rotateY(360deg)}}
+
+/* Sections */
+section{padding:52px 0;border-top:1px solid var(--line)}
+.head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:16px;margin-bottom:26px}
+h2{font-family:var(--serif);font-size:1.9rem;margin:0 0 6px;letter-spacing:-.01em}
+.lead{color:var(--muted);margin:0;max-width:40em}
+.search{width:min(100%,280px);padding:10px 14px;border:1px solid var(--line);border-radius:8px;
+  background:var(--surface);color:var(--ink);font:inherit}
+.search::placeholder{color:var(--muted)}
+
+/* Cours */
+.courses{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.course{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px;scroll-margin-top:80px}
+.course .abbr{font-family:var(--serif);font-size:1.7rem;font-weight:700;color:var(--accent);line-height:1}
+.course h3{margin:6px 0;font-size:1.1rem}
+.course p{margin:0;color:var(--muted);font-size:.95rem}
+.course ul{list-style:none;margin:14px 0 0;padding:0;border-top:1px solid var(--line)}
+.course li{padding:8px 0;border-bottom:1px solid var(--line);font-size:.95rem}
+.course li a{color:var(--accent);font-weight:600;text-decoration:none}
+.course li a:hover{text-decoration:underline}
+.course li.soon{color:var(--muted)}
+
+/* Visualisations 3D : une grande vignette + les suivantes */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px}
+.viz{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;text-decoration:none}
+.viz:hover{border-color:var(--accent)}
+.thumb{height:150px;display:grid;place-items:center;background:var(--soft);perspective:500px}
+.mini{--s:54px;width:54px;height:54px;position:relative;transform-style:preserve-3d;transform:rotateX(-24deg) rotateY(35deg)}
+.mini i{position:absolute;inset:0;border:1.5px solid var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.mini i:nth-child(1){transform:translateZ(27px)}.mini i:nth-child(2){transform:rotateY(90deg) translateZ(27px)}
+.mini i:nth-child(3){transform:rotateX(90deg) translateZ(27px)}
+.viz:hover .mini{animation:spin 6s linear infinite}
+.viz .body{padding:16px 18px 18px}
+.viz h3{margin:0 0 4px;font-size:1.05rem}
+.viz p{margin:0;color:var(--muted);font-size:.95rem}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.tag{font-size:.78rem;padding:2px 9px;border-radius:999px;background:var(--soft);color:var(--accent)}
+.tag.soon{background:transparent;border:1px solid var(--line);color:var(--warn)}
+.viz.soon{opacity:.65;pointer-events:none}
+
+/* Recherche */
+.papers{list-style:none;margin:0;padding:0}
+.paper{padding:18px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:90px 1fr;gap:16px}
+.paper:first-child{border-top:0}
+.paper time{color:var(--muted);font-variant-numeric:tabular-nums}
+.paper h3{margin:0 0 2px;font-size:1.05rem}
+.paper p{margin:0;color:var(--muted);font-size:.95rem}
+.paper a{color:var(--accent)}
+.empty{color:var(--muted);padding:18px 0}
+
+footer{border-top:1px solid var(--line);padding:28px 0 36px;color:var(--muted);font-size:.9rem;
+  display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
+
+@media (max-width:760px){
+  .hero{padding:24px 0}
+  .stage{height:240px;order:-1}
+  .cube{--s:120px}.cube.inner{--s:58px}
+  .paper{grid-template-columns:1fr;gap:2px}
+  nav a{padding:6px 8px}
+}
+@media (prefers-reduced-motion:reduce){
+  .cube,.viz:hover .mini{animation:none;transform:rotateX(-24deg) rotateY(35deg)}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <div class="wrap nav">
+    <h1 class="id"><a class="brand" href="index.html">Notes de cours et ressources pédagogiques</a>
+      <span class="by">Par Abdelghani SEGHIR</span>
+      <span class="by">Professeur, Université de Bejaia</span></h1>
+    <nav aria-label="Navigation principale">
+      <div class="dd" id="dd"><button type="button" id="ddBtn" aria-haspopup="true" aria-expanded="false">Cours ▾</button><ul class="menu" id="menu"></ul></div>
+      <a href="#visualisations">Visualisations 3D</a>
+      <a href="#projets">Projets</a>
+      <a href="#apropos">À propos</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div class="stage" aria-hidden="true">
+      <span class="lab" style="color:var(--rx)">x<sub>1</sub></span><span class="lab" style="color:var(--gy)">x<sub>2</sub></span><span class="lab" style="color:var(--bz)">x<sub>3</sub></span>
+      <div class="cube">
+        <div class="face f1"></div><div class="face f2"></div><div class="face f3"></div>
+        <div class="face f4"></div><div class="face f5"></div><div class="face f6"></div>
+        <b class="ax x"></b><b class="ax y"></b><b class="ax z"></b>
+        <div class="core">
+          <div class="cube inner">
+            <div class="face f1"></div><div class="face f2"></div><div class="face f3"></div>
+            <div class="face f4"></div><div class="face f5"></div><div class="face f6"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="cours">
+    <div class="head">
+      <div>
+        <h2>Cours</h2>
+        <p class="lead">Quatre cours, également accessibles depuis le menu « Cours » en haut de page : Python (programmation scientifique), MMC (mécanique des milieux continus), MEF (méthode des éléments finis) et MNA (méthodes numériques avancées).</p>
+      </div>
+      <input class="search" id="q" type="search" placeholder="Filtrer cours et visualisations" aria-label="Filtrer cours et visualisations">
+    </div>
+    <ul class="courses" id="courses"></ul>
+    <p class="empty" id="noCourses" hidden>Aucun cours ne correspond à ce filtre.</p>
+  </section>
+
+  <section id="visualisations">
+    <div class="head">
+      <div>
+        <h2>Visualisations 3D</h2>
+        <p class="lead">Pages interactives : faites pivoter, zoomez et modifiez les paramètres directement dans le navigateur.</p>
+      </div>
+    </div>
+    <div class="grid" id="viz"></div>
+    <p class="empty" id="noViz" hidden>Aucune visualisation ne correspond à ce filtre.</p>
+  </section>
+
+  <section id="projets">
+    <div class="head">
+      <div>
+        <h2>Projets</h2>
+        <p class="lead">Projets et travaux de recherche : articles, rapports et développements en cours.</p>
+      </div>
+    </div>
+    <ul class="papers" id="papers"></ul>
+  </section>
+
+  <section id="apropos">
+    <h2>À propos</h2>
+    <p class="lead">Ce site rassemble des notes de cours, des outils de visualisation et des travaux de recherche. Les contenus sont ajoutés au fil de l'eau ; chaque page 3D s'ouvre directement dans le navigateur, sans installation.</p>
+  </section>
+</main>
+
+<footer class="wrap">
+  <span>© 2026 — Abdelghani SEGHIR, Université de Bejaia</span>
+  <a href="#cours">Retour aux cours</a>
+</footer>
+</div>
+
+<script>
+/* ============================================================
+   CONTENU DU SITE — c'est ici que vous ajoutez vos pages.
+   Pour publier une page : renseignez "href". Sans "href",
+   l'entrée s'affiche comme "À venir".
+   ============================================================ */
+const COURS = [
+  { abbr:"Python", titre:"Programmation Python",
+    desc:"Programmation scientifique : structures de contrôle, fonctions, tableaux et calcul numérique.",
+    tags:["programmation"],
+    chapitres:[ { titre:"Chap. 2 — Structures de contrôle", href:"Chap2-Structures_de_controle.html" } ] },
+  { abbr:"MMC", titre:"Mécanique des milieux continus",
+    desc:"Cinématique, déformations, contraintes et lois de comportement.",
+    tags:["mécanique"], chapitres:[] },
+  { abbr:"MEF", titre:"Méthode des éléments finis",
+    desc:"Formulation variationnelle, discrétisation et mise en œuvre numérique.",
+    tags:["numérique","mécanique"], chapitres:[] },
+  { abbr:"MNA", titre:"Méthodes numériques avancées",
+    desc:"Résolution numérique d'équations, intégration, algorithmes et applications.",
+    tags:["numérique"], chapitres:[] }
+];
+const slug = c => "cours-" + c.abbr.toLowerCase();
+
+const VIZ3D = [
+  { titre:"Exemple de visualisation 3D", desc:"Remplacez par votre première page 3D.",
+    href:"", tags:["3D","interactif"] },
+  { titre:"Surface et courbes de niveau", desc:"Exemple à venir.", href:"", tags:["maths","3D"] },
+  { titre:"Champ de vecteurs", desc:"Exemple à venir.", href:"", tags:["physique","3D"] }
+];
+
+const PROJETS = [
+  { annee:"2026", titre:"Titre d'un projet ou d'un article", desc:"Résumé en une phrase.", href:"" }
+];
+
+/* ---------- Rendu ---------- */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $ = id => document.getElementById(id);
+
+function match(item, q){
+  const ch = (item.chapitres||[]).map(x=>x.titre).join(" ");
+  return !q || ((item.abbr||"")+" "+item.titre+" "+item.desc+" "+item.tags.join(" ")+" "+ch).toLowerCase().includes(q);
+}
+
+/* Menu déroulant « Cours » */
+$("menu").innerHTML = COURS.map(c=>`<li><a href="#${slug(c)}">${esc(c.abbr)}<small>${esc(c.titre)}</small></a></li>`).join("");
+const dd = $("dd"), ddBtn = $("ddBtn");
+const closeMenu = () => { dd.classList.remove("open"); ddBtn.setAttribute("aria-expanded","false"); };
+ddBtn.addEventListener("click", e => { e.stopPropagation(); ddBtn.setAttribute("aria-expanded", dd.classList.toggle("open")); });
+$("menu").addEventListener("click", closeMenu);
+document.addEventListener("click", e => { if(!dd.contains(e.target)) closeMenu(); });
+document.addEventListener("keydown", e => { if(e.key==="Escape") closeMenu(); });
+
+function render(q=""){
+  q = q.trim().toLowerCase();
+
+  const cours = COURS.filter(c=>match(c,q));
+  $("courses").innerHTML = cours.map(c=>{
+    const ch = c.chapitres.length
+      ? c.chapitres.map(x=>`<li><a href="${esc(x.href)}">${esc(x.titre)}</a></li>`).join("")
+      : `<li class="soon">Chapitres à venir</li>`;
+    return `<li class="course" id="${slug(c)}">
+      <div class="abbr">${esc(c.abbr)}</div>
+      <h3>${esc(c.titre)}</h3><p>${esc(c.desc)}</p>
+      <ul>${ch}</ul>
+    </li>`;
+  }).join("");
+  $("noCourses").hidden = cours.length>0;
+
+  const viz = VIZ3D.filter(v=>match(v,q));
+  $("viz").innerHTML = viz.map(v=>{
+    const ok = !!v.href;
+    const tags = v.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("") + (ok?"":`<span class="tag soon">À venir</span>`);
+    return `<a class="viz${ok?"":" soon"}" ${ok?`href="${esc(v.href)}"`:`aria-disabled="true" tabindex="-1"`}>
+      <div class="thumb"><div class="mini"><i></i><i></i><i></i><b class="ax x"></b><b class="ax y"></b><b class="ax z"></b></div></div>
+      <div class="body"><h3>${esc(v.titre)}</h3><p>${esc(v.desc)}</p><div class="tags">${tags}</div></div>
+    </a>`;
+  }).join("");
+  $("noViz").hidden = viz.length>0;
+}
+
+$("papers").innerHTML = PROJETS.map(r=>`<li class="paper">
+  <time>${esc(r.annee)}</time>
+  <div><h3>${r.href?`<a href="${esc(r.href)}">${esc(r.titre)}</a>`:esc(r.titre)}</h3><p>${esc(r.desc)}</p></div>
+</li>`).join("");
+
+/* Cube du hero : rotation et étiquettes x1, x2, x3 (toujours lisibles) */
+(function(){
+  const cube = document.querySelector(".stage > .cube");
+  const labs = document.querySelectorAll(".stage .lab");
+  const dirs = [[1,0,0],[0,0,-1],[0,-1,0]];           // x1, x2, x3 (coin bas-avant-gauche)
+  const P = 900, A = -24*Math.PI/180;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function frame(t){
+    const deg = reduce ? 35 : (t/1000)*20, th = deg*Math.PI/180;
+    cube.style.transform = `rotateX(-24deg) rotateY(${deg}deg)`;
+    const s = cube.offsetWidth, L = s*1.3 + 18;
+    const c = Math.cos(th), sn = Math.sin(th), ca = Math.cos(A), sa = Math.sin(A);
+    dirs.forEach((d,i)=>{
+      const x = -s/2 + L*d[0], y = s/2 + L*d[1], z = s/2 + L*d[2];
+      const x1 = x*c + z*sn, z1 = -x*sn + z*c;
+      const y2 = y*ca - z1*sa, z2 = y*sa + z1*ca;
+      const k = P/(P - z2);
+      labs[i].style.transform = `translate(${x1*k}px,${y2*k}px) translate(-50%,-50%)`;
+    });
+    if(!reduce) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+$("q").addEventListener("input", e=>render(e.target.value));
+render();
+</script>
+</body>
+</html>

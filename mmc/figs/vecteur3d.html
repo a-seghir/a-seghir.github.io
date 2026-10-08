@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Vecteur AB et projections</title>
+
+<!-- 
+<script src="../../js/three.min.js"></script>
+-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
@@ -24,6 +28,7 @@ body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"
 #info{padding:4px 12px;color:var(--mut);font-size:14px;background:var(--panel)}
 #top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 12px;font-size:14px;background:var(--panel)}
 #ttl{font-weight:600}
+#ctl{display:flex;align-items:center;gap:6px;white-space:nowrap;flex:none;font-size:13px}
 #ttl small{font-weight:400;color:var(--mut);font-size:12px}
 #ttl a{color:var(--cyan);text-decoration:none}
 #wrap{position:relative;flex:1;min-height:0;overflow:hidden}
@@ -34,13 +39,8 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 </style>
 </head>
 <body>
-<div id="top"><span id="ttl">Représentation d'un vecteur 3D 
- <small>
-   <a href="https://a-seghir.github.io/mmc/chap1.pdf" target="_blank" rel="noopener">
-     (figure 1.2 du fichier chap1.pdf)
-   </a></small>
-</span><button id="tg" type="button">Paramètres</button></div>
-<div id="panel" class="c"></div>
+<div id="top"><span id="ttl">Représentation d'un vecteur 3D <small>(<a href="https://a-seghir.github.io/mmc/chap1.pdf" target="_blank" rel="noopener">figure 1.2 du fichier chap1.pdf</a>)</small></span><span id="ctl">Paramètres : <button id="tg" type="button">Affichés</button></span></div>
+<div id="panel"></div>
 <div id="info"><span id="iv"></span></div>
 <div id="wrap"><canvas id="c"></canvas></div>
 <script>
@@ -48,7 +48,7 @@ const SL=[['A','x',3,7],['A','y',1,6.5],['A','z',1.25,3.5],['B','x',6,7],['B','y
 const panel=document.getElementById('panel'),val={};
 SL.forEach(([p,c,v,m])=>{
   const l=document.createElement('label');
-  l.innerHTML=`<b>${p}<sub>${c}</sub></b><input type="range" min="0" max="${m}" step="0.25" value="${v}"><output></output>`;
+  l.innerHTML=`<b>${p}<sub>${{x:1,y:2,z:3}[c]}</sub></b><input type="range" min="0" max="${m}" step="0.25" value="${v}"><output></output>`;
   const i=l.querySelector('input'),o=l.querySelector('output');
   val[p+c]=v;o.textContent=v.toFixed(2);
   i.oninput=()=>{val[p+c]=+i.value;o.textContent=(+i.value).toFixed(2);build()};
@@ -69,9 +69,9 @@ mq.addEventListener('change',()=>{if(th.value==='auto')applyTheme()});
 applyTheme();
 pj.onchange=()=>{cam=pj.value==='ortho'?ortho:persp};
 const tg=document.getElementById('tg');
-function setC(c){panel.classList.toggle('c',c);tg.textContent=c?'Afficher les paramètres':'Masquer les paramètres'}
+function setC(c){panel.classList.toggle('c',c);tg.textContent=c?'Masqués':'Affichés'}
 tg.onclick=()=>setC(!panel.classList.contains('c'));
-setC(innerWidth<600);
+setC(false);
 
 const cv=document.getElementById('c'),wrap=document.getElementById('wrap');
 const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});

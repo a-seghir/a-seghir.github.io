@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vecteur AB et projections</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+ --bg:#fff;--ink:#111;--panel:#f3f4f6;--cyan:#0e7490;--red:#c62828;--green:#2e7d32;--blue:#1565c0;--mut:#555}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171a;--ink:#eee;--panel:#22262b;--cyan:#22d3ee;--red:#ff6b6b;--green:#6fcf73;--blue:#64b5f6;--mut:#aaa}}
+:root[data-theme="dark"]{--bg:#15171a;--ink:#eee;--panel:#22262b;--cyan:#22d3ee;--red:#ff6b6b;--green:#6fcf73;--blue:#64b5f6;--mut:#aaa}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+#title{padding:8px 12px 4px;text-align:center;position:relative}
+#tg{font:inherit;font-size:13px;color:var(--ink);background:var(--bg);border:1px solid var(--mut);border-radius:6px;padding:3px 8px;cursor:pointer;white-space:nowrap;flex:none}
+#panel.c>:not(#info){display:none!important}
+@media (max-width:600px){#title{display:none}#cr{display:block}#info{font-size:13px}#panel{padding:6px 10px;grid-template-columns:repeat(2,1fr);font-size:13px}.lb{font-size:15px}}
+#title h1{margin:0;font-size:clamp(17px,4.5vw,22px)}
+#title p{margin:2px 0 0;font-size:13px;color:var(--mut)}
+#title a{color:var(--cyan);text-decoration:none}
+#panel{background:var(--panel);padding:8px 12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px 16px;font-size:14px}
+#panel label{display:flex;align-items:center;gap:6px}
+#panel input{flex:1;min-width:60px}
+#panel b{font-family:Georgia,serif;font-style:italic;width:22px}
+#panel output{width:38px;text-align:right;font-variant-numeric:tabular-nums}
+#panel select{flex:1;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--mut);border-radius:4px;padding:2px 4px}
+#cr{order:-1;display:none;grid-column:1/-1;font-size:13px;color:var(--mut)}
+#cr h1{margin:0;font-size:15px;color:var(--ink)}
+#cr p{margin:2px 0 0}
+#cr a{color:var(--cyan);text-decoration:none}
+#info{grid-column:1/-1;order:-2;display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--mut)}
+#wrap{position:relative;flex:1;min-height:0;overflow:hidden}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.lb{position:absolute;left:0;top:0;font:italic 17px Georgia,serif;pointer-events:none;white-space:nowrap;transform:translate(-50%,-50%)}
+.lb sub{font-size:12px}
+</style>
+</head>
+<body>
+<header id="title"><h1>Représentation d'un vecteur 3D</h1><p>A. Seghir (<a href="https://a-seghir.blogpost.com/mmc" target="_blank" rel="noopener">a-seghir.blogpost.com/mmc</a>)</p></header>
+<div id="panel"></div>
+<div id="wrap"><canvas id="c"></canvas></div>
+<script>
+const SL=[['A','x',3,7],['A','y',1,6.5],['A','z',1.25,3.5],['B','x',6,7],['B','y',4.5,6.5],['B','z',2.25,3.5]];
+const panel=document.getElementById('panel'),val={};
+SL.forEach(([p,c,v,m])=>{
+  const l=document.createElement('label');
+  l.innerHTML=`<b>${p}<sub>${c}</sub></b><input type="range" min="0" max="${m}" step="0.25" value="${v}"><output></output>`;
+  const i=l.querySelector('input'),o=l.querySelector('output');
+  val[p+c]=v;o.textContent=v.toFixed(2);
+  i.oninput=()=>{val[p+c]=+i.value;o.textContent=(+i.value).toFixed(2);build()};
+  panel.appendChild(l);
+});
+const opts=document.createElement('div');opts.style.display='contents';
+opts.innerHTML=`<label>Thème <select id="th"><option value="auto">Auto</option><option value="light">Clair</option><option value="dark">Sombre</option></select></label>
+<label>Projection <select id="pj"><option value="persp">Perspective</option><option value="ortho">Orthographique</option></select></label>`;
+const cr=document.createElement('div');cr.id='cr';
+cr.innerHTML=`<h1>Représentation d'un vecteur 3D</h1><p>A. Seghir (<a href="https://a-seghir.blogpost.com/mmc" target="_blank" rel="noopener">a-seghir.blogpost.com/mmc</a>)</p>`;
+panel.appendChild(cr);panel.appendChild(opts);
+const info=document.createElement('div');info.id='info';info.innerHTML='<span id="iv"></span><button id="tg" type="button">Paramètres</button>';panel.appendChild(info);
+const th=document.getElementById('th'),pj=document.getElementById('pj');
+const mq=matchMedia('(prefers-color-scheme: dark)'),qp=new URLSearchParams(location.search);
+let saved=null;try{saved=localStorage.getItem('v3d-theme')}catch(e){}
+th.value=['auto','light','dark'].includes(qp.get('theme'))?qp.get('theme'):(saved||'auto');
+let built=false;
+function applyTheme(){const eff=th.value==='auto'?(mq.matches?'dark':'light'):th.value;document.documentElement.setAttribute('data-theme',eff);if(built)build()}
+th.onchange=()=>{try{localStorage.setItem('v3d-theme',th.value)}catch(e){}applyTheme()};
+mq.addEventListener('change',()=>{if(th.value==='auto')applyTheme()});
+applyTheme();
+pj.onchange=()=>{cam=pj.value==='ortho'?ortho:persp};
+const tg=document.getElementById('tg');
+function setC(c){panel.classList.toggle('c',c);tg.textContent=c?'Paramètres':'Masquer'}
+tg.onclick=()=>setC(!panel.classList.contains('c'));
+setC(innerWidth<600);
+
+const cv=document.getElementById('c'),wrap=document.getElementById('wrap');
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2));
+const S=new THREE.Scene(),persp=new THREE.PerspectiveCamera(40,1,.1,100),ortho=new THREE.OrthographicCamera(-1,1,1,-1,.1,100);
+persp.up.set(0,0,1);ortho.up.set(0,0,1);let cam=persp;
+const T=new THREE.Vector3(3.2,2.6,1.2);
+let az=-1.05,el=.38,rad=17,zoomed=false;
+function fit(){const a=cv.clientWidth/Math.max(1,cv.clientHeight),hf=Math.atan(Math.tan(THREE.MathUtils.degToRad(20))*Math.min(1,a));rad=Math.max(6,Math.min(40,4.3/Math.sin(hf)))}
+function place(){cam.position.set(T.x+rad*Math.cos(el)*Math.cos(az),T.y+rad*Math.cos(el)*Math.sin(az),T.z+rad*Math.sin(el));cam.lookAt(T);
+  if(cam===ortho){const hh=rad*Math.tan(THREE.MathUtils.degToRad(20)),a=cv.clientWidth/cv.clientHeight;ortho.left=-hh*a;ortho.right=hh*a;ortho.top=hh;ortho.bottom=-hh;ortho.updateProjectionMatrix()}}
+function resize(){const w=wrap.clientWidth,h=wrap.clientHeight;R.setSize(w,h,false);persp.aspect=w/h;persp.updateProjectionMatrix();if(!zoomed)fit()}
+new ResizeObserver(resize).observe(wrap);
+const ptr=new Map();let pd=0;
+const dist=()=>{const [p,q]=[...ptr.values()];return Math.hypot(p[0]-q[0],p[1]-q[1])};
+cv.addEventListener('pointerdown',e=>{ptr.set(e.pointerId,[e.clientX,e.clientY]);cv.setPointerCapture(e.pointerId);if(ptr.size===2)pd=dist()});
+const up=e=>{ptr.delete(e.pointerId);if(ptr.size===2)pd=dist()};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+cv.addEventListener('pointermove',e=>{
+  if(!ptr.has(e.pointerId))return;
+  const o=ptr.get(e.pointerId);
+  if(ptr.size===1){az-=(e.clientX-o[0])*.007;el=Math.max(-1.4,Math.min(1.4,el+(e.clientY-o[1])*.007))}
+  ptr.set(e.pointerId,[e.clientX,e.clientY]);
+  if(ptr.size===2){const d=dist();if(pd>0){zoomed=true;rad=Math.max(6,Math.min(40,rad*pd/d))}pd=d}
+});
+cv.addEventListener('wheel',e=>{e.preventDefault();zoomed=true;rad=Math.max(6,Math.min(40,rad*(1+e.deltaY*.001)))},{passive:false});
+
+const G=new THREE.Group();S.add(G);
+let labels=[];
+const V=a=>new THREE.Vector3(a[0],a[1],a[2]);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function seg(a,b,col,dash){
+  const g=new THREE.BufferGeometry().setFromPoints([V(a),V(b)]);
+  const m=dash?new THREE.LineDashedMaterial({color:col,dashSize:dash[0],gapSize:dash[1]}):new THREE.LineBasicMaterial({color:col});
+  const l=new THREE.Line(g,m);if(dash)l.computeLineDistances();G.add(l);
+}
+function tube(a,b,col,rr){
+  const A=V(a),B=V(b),d=B.clone().sub(A),L=d.length();if(L<1e-6)return;
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(rr,rr,L,8),new THREE.MeshBasicMaterial({color:col}));
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());
+  m.position.copy(A).add(B).multiplyScalar(.5);G.add(m);
+}
+function arrow(a,b,col,dash,h=.28,w=0){
+  const A=V(a),B=V(b),d=B.clone().sub(A),L=d.length();if(L<1e-6)return;
+  d.normalize();
+  const e=B.clone().sub(d.clone().multiplyScalar(h*.8)).toArray();
+  if(w)tube(a,e,col,w);else seg(a,e,col,dash);
+  const c=new THREE.Mesh(new THREE.ConeGeometry(h*.3,h,12),new THREE.MeshBasicMaterial({color:col}));
+  c.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);
+  c.position.copy(B).sub(d.clone().multiplyScalar(h/2));G.add(c);
+}
+function dot(p,col,r=.07){
+  const m=new THREE.Mesh(new THREE.SphereGeometry(r,14,10),new THREE.MeshBasicMaterial({color:col}));
+  m.position.copy(V(p));G.add(m);
+}
+function lab(p,html,col,dx=0,dy=-14){
+  const e=document.createElement('div');e.className='lb';e.innerHTML=html;e.style.color=col;
+  wrap.appendChild(e);labels.push({e,p:V(p),dx,dy});
+}
+const DOT=[.07,.1],DASH=[.2,.1];
+
+function axes3D(xm,ym,zm,ink,rd,gr,bl){
+  arrow([0,0,0],[xm,0,0],rd,0,.32,.03);arrow([0,0,0],[0,ym,0],gr,0,.32,.03);arrow([0,0,0],[0,0,zm],bl,0,.32,.03);
+  const off=.33; // distance fixe au-delà de la pointe (≈ position=1.05)
+  lab([xm+off,0,0],'<i>x</i><sub>1</sub>',rd,0,0);lab([0,ym+off,0],'<i>x</i><sub>2</sub>',gr,0,0);lab([0,0,zm+off],'<i>x</i><sub>3</sub>',bl,0,0);
+  dot([0,0,0],ink,.07);lab([0,0,0],'<i>o</i>',ink,0,14);
+}
+function build(){
+  G.clear();labels.forEach(l=>l.e.remove());labels=[];
+  const ink=css('--ink'),cy=css('--cyan'),rd=css('--red'),gr=css('--green'),bl=css('--blue');
+  // axes (équivalent de axes3D(xmax,ymax,zmax))
+  axes3D(7,6.5,3.5,ink,rd,gr,bl);
+  const a=[val.Ax,val.Ay,val.Az],b=[val.Bx,val.By,val.Bz];
+  const Ap=[a[0],a[1],0],Bp=[b[0],b[1],0],Ayz=[0,a[1],a[2]],Byz=[0,b[1],b[2]];
+  const Ax=[a[0],0,0],Ay=[0,a[1],0],Az=[0,0,a[2]],Bx=[b[0],0,0],By=[0,b[1],0],Bz=[0,0,b[2]];
+  // vecteur AB
+  arrow(a,b,ink);dot(a,ink,.09);dot(b,ink,.09);
+  lab(a,'<i>A</i>',ink);lab(b,'<i>B</i>',ink);
+  // projection (x,y)
+  [[a,Ap],[b,Bp],[a,Ayz],[b,Byz]].forEach(([p,q])=>seg(p,q,ink,DOT));
+  arrow(Ap,Bp,cy,DASH);dot(Ap,ink);dot(Bp,ink);
+  lab(Ap,"A′",cy,0,14);lab(Bp,"B′",cy,0,14);
+  // projection (y,z)
+  arrow(Ayz,Byz,cy,DASH);dot(Ayz,ink);dot(Byz,ink);
+  lab(Ayz,"A″",cy,-14,-12);lab(Byz,"B″",cy,-14,-12);
+  // points sur les axes
+  [[a,Ap,Ax,Ay,Ayz,Az,'A'],[b,Bp,Bx,By,Byz,Bz,'B']].forEach(([P,pp,px,py,pyz,pz,n])=>{
+    seg(pp,px,gr,DOT);seg(pp,py,rd,DOT);seg(pyz,pz,gr,DOT);seg(pyz,py,bl,DOT);
+    dot(px,rd);dot(py,gr);dot(pz,bl);
+    lab(px,n+'<sub>1</sub>',rd,0,16);lab(py,n+'<sub>2</sub>',gr,16,0);lab(pz,n+'<sub>3</sub>',bl,-16,0);
+  });
+  const d=[b[0]-a[0],b[1]-a[1],b[2]-a[2]];
+  document.getElementById('iv').innerHTML=`<b>AB</b> = (${d.map(x=>x.toFixed(2)).join(' ; ')}) &nbsp;|&nbsp; ‖AB‖ = ${Math.hypot(...d).toFixed(3)}`;
+}
+
+
+const tmp=new THREE.Vector3();
+function loop(){
+  place();R.render(S,cam);
+  const w=cv.clientWidth,h=cv.clientHeight;
+  labels.forEach(l=>{
+    tmp.copy(l.p).project(cam);
+    l.e.style.display=tmp.z>1?'none':'block';
+    l.e.style.left=((tmp.x+1)/2*w+l.dx)+'px';
+    l.e.style.top=((1-tmp.y)/2*h+l.dy)+'px';
+  });
+  requestAnimationFrame(loop);
+}
+if(qp.get('proj')==='ortho'){pj.value='ortho';pj.onchange()}
+built=true;resize();build();loop();
+</script>
+</body>
+</html>

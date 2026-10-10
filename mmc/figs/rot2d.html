@@ -17,55 +17,71 @@
        padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
 
   /* ----- En-tête ultra-compact ----- */
-  header{display:flex;align-items:center;gap:.5rem;padding:.25rem .6rem;border-bottom:1px solid var(--line)}
+  header{display:flex;align-items:center;gap:.4rem;padding:.25rem .5rem;border-bottom:1px solid var(--line)}
   header .titre{flex:1;min-width:0}
   h1{font-size:0.95rem;margin:0;line-height:1.15}
   header .sous{font-size:.72rem;color:var(--muted);line-height:1.2}
   header a{color:var(--accent)}
   .ctl{display:flex;align-items:center;gap:.3rem;font-size:.78rem;white-space:nowrap}
-  button#toggle{font:inherit;font-size:.75rem;padding:.15rem .5rem;border:1px solid var(--line);border-radius:6px;
-       background:var(--card);color:var(--fg);cursor:pointer;min-width:4rem}
-  button#toggle:hover{border-color:var(--accent)}
+  button.btn-ctl{font:inherit;font-size:.75rem;padding:.15rem .4rem;border:1px solid var(--line);border-radius:6px;
+       background:var(--card);color:var(--fg);cursor:pointer}
+  button.btn-ctl:hover{border-color:var(--accent); background:#fff}
+  button#resetView{font-size:1rem; padding:.1rem .3rem; line-height:1;}
 
   /* ----- Barre de paramètres dense ----- */
   .barre{display:flex;flex-wrap:wrap;align-items:center;gap:.15rem .6rem;padding:.2rem .5rem;
          background:var(--card);border-bottom:1px solid var(--line)}
-  .ctrl{display:flex;align-items:center;gap:.25rem;flex:1 1 180px;min-width:0}
-  .ctrl label{width:1.6rem;font-family:"Times New Roman",Times,serif;font-style:italic;font-size:0.9rem;white-space:nowrap;text-align:right}
-  .ctrl input[type=range]{flex:1;min-width:0;margin:0;height:0.9rem;cursor:pointer}
+  .ctrl{display:flex;align-items:center;gap:.3rem;flex:1 1 200px;min-width:0}
+  .ctrl label{width:1.8rem;font-family:"Times New Roman",Times,serif;font-style:italic;font-size:0.9rem;white-space:nowrap;text-align:right}
+  
+  /* Sliders affinés pour PC et Mobile */
+  .ctrl input[type=range]{
+    flex:1;min-width:0;margin:0;height:6px;cursor:pointer;
+    -webkit-appearance:none; appearance:none; background:transparent;
+  }
+  .ctrl input[type=range]::-webkit-slider-runnable-track{height:6px;background:var(--line);border-radius:3px}
+  .ctrl input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;height:16px;width:16px;border-radius:50%;background:var(--accent);margin-top:-5px;
+  }
+  .ctrl input[type=range]::-moz-range-track{height:6px;background:var(--line);border-radius:3px;border:none}
+  .ctrl input[type=range]::-moz-range-thumb{height:16px;width:16px;border-radius:50%;background:var(--accent);border:none}
+  
   .ctrl input[type=number]{width:3rem;font:inherit;font-size:.78rem;padding:.1rem .15rem;border:1px solid var(--line);border-radius:5px;text-align:right}
   
   .barre.sans-panneau .ctrl, .barre.sans-panneau .res{display:none}
   
   /* Résultats compacts */
-  .res{flex:1 1 100%;display:flex;flex-wrap:wrap;justify-content:center;gap:0 .6rem;
-       font-family:"Times New Roman",Times,serif;font-size:.8rem;line-height:1.2; padding-top:0.1rem}
+  .res{flex:1 1 100%;display:flex;flex-wrap:wrap;justify-content:center;gap:0 .5rem;
+       font-family:"Times New Roman",Times,serif;font-size:.78rem;line-height:1.2; padding-top:0.1rem}
   .res span{white-space:nowrap}
   .res i{font-style:italic}
   .res .rouge{color:var(--rougeC)} .res .vert{color:var(--vertC)} .res .bleu{color:var(--bleu)}
 
   /* ----- Figure : occupe tout le reste ----- */
-  #fig{position:relative;flex:1;min-width:0;min-height:250px}
-  svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-  svg text{font-family:"Times New Roman","STIX Two Text",Times,serif;font-style:italic;font-size:var(--fs,18px)}
+  #fig{position:relative;flex:1;min-width:0;min-height:250px; overflow:hidden;}
+  svg{position:absolute;inset:0;width:100%;height:100%;display:block; touch-action: none; cursor: grab;}
+  svg:active { cursor: grabbing; }
+  svg text{font-family:"Times New Roman","STIX Two Text",Times,serif;font-style:italic;font-size:var(--fs,18px); pointer-events: none;}
   svg text .sub{font-style:normal;font-weight:bold;font-size:calc(var(--fs,18px)*0.67)}
 
   /* ----- Optimisation Mobile (max 600px) ----- */
   @media (max-width:600px){
-    header{padding:.2rem .4rem; gap:.4rem}
+    header{padding:.2rem .4rem; gap:.3rem}
     h1{font-size:.88rem}
     header .sous{font-size:.68rem}
     .ctl{font-size:.72rem}
-    button#toggle{font-size:.7rem;padding:.1rem .4rem;min-width:3.5rem}
+    button.btn-ctl{font-size:.7rem;padding:.1rem .3rem}
     
-    /* Grille 2 colonnes pour gagner un maximum de hauteur sur mobile */
-    .barre{padding:.15rem .4rem; gap:.15rem .4rem}
-    .ctrl{flex:1 1 45%;} /* Force 2 contrôles par ligne */
-    .ctrl label{width:1.4rem;font-size:.85rem}
-    .ctrl input[type=range]{height:.8rem}
-    .ctrl input[type=number]{width:2.6rem;font-size:.75rem}
+    /* Force 3 lignes distinctes sur mobile */
+    .barre{padding:.15rem .4rem; gap:.2rem .4rem}
+    .ctrl{
+      flex: 1 1 100%; /* Prend toute la largeur, empilement vertical garanti */
+      justify-content: space-between;
+    }
+    .ctrl label{width:2rem; font-size:.85rem; text-align:left}
+    .ctrl input[type=range]{flex:1; margin:0 .3rem;}
+    .ctrl input[type=number]{width:2.8rem;font-size:.75rem}
     
-    /* Les résultats passent en dessous, très compacts */
     .res{font-size:.72rem;gap:0 .4rem;padding-top:0.05rem}
   }
 </style>
@@ -78,7 +94,8 @@
     <div class="sous">(version interactive de la <a id="lien" href="#">figure du cours (PDF)</a>)</div>
   </div>
   <div class="ctl">
-    <button id="toggle" type="button" aria-expanded="true" aria-controls="panneau">Affichés</button>
+    <button id="resetView" class="btn-ctl" title="Recentrer la vue">⟲</button>
+    <button id="toggle" class="btn-ctl" type="button" aria-expanded="true" aria-controls="panneau">Paramètres</button>
   </div>
 </header>
 
@@ -101,7 +118,9 @@
   <div class="res" id="res"></div>
 </section>
 
-<div id="fig"><svg id="svg" role="img" aria-label="Rotation de repère en 2D : projections d'un point P"></svg></div>
+<div id="fig">
+  <svg id="svg" role="img" aria-label="Rotation de repère en 2D : projections d'un point P"></svg>
+</div>
 
 <script>
 /* ---------- À adapter : lien vers le PDF du cours ---------- */
@@ -110,11 +129,7 @@ const PDF_TEXT = "figure du cours (PDF)";
 
 /* ---------- Valeurs initiales ---------- */
 const etat = { x: 3.75, y: 5.0, th: 28 };
-
-/* ---------- Palette ---------- */
 const C = { rougeF:"#820303", rougeC:"#cc3380", vertF:"#0f660f", vertC:"#739e5e", bleu:"#0040d9", noir:"#111" };
-
-/* ---------- Longueurs minimales des axes ---------- */
 const LX = 9, LY = 7, PMAX = 5.5;
 
 const svg = document.getElementById("svg");
@@ -126,11 +141,31 @@ const rad = d => d*Math.PI/180;
 const f1 = n => n.toFixed(1);
 const fr = (n,d) => n.toFixed(d).replace(".", ",").replace("-", "−");
 
+/* ================= Gestion du Zoom/Pan ================= */
+let baseVB = null; // ViewBox calculée automatiquement
+let currentVB = null; // ViewBox modifiée par l'utilisateur
+let isDragging = false;
+let lastPointer = { x: 0, y: 0 };
+let initialPinchDist = 0;
+let initialPinchVB = null;
+
+function applyVB() {
+  if (currentVB) {
+    svg.setAttribute("viewBox", `${currentVB.x} ${currentVB.y} ${currentVB.w} ${currentVB.h}`);
+  } else if (baseVB) {
+    svg.setAttribute("viewBox", `${baseVB.x} ${baseVB.y} ${baseVB.w} ${baseVB.h}`);
+  }
+}
+
+function resetView() {
+  currentVB = null;
+  applyVB();
+}
+
 /* ================= Dessin ================= */
 function render(){
   const W = fig.clientWidth || 800, H = fig.clientHeight || 500;
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-
+  
   const {x, y} = etat, th = rad(etat.th), c = Math.cos(th), s = Math.sin(th);
   const sP = x*c + y*s, tP = -x*s + y*c;
 
@@ -150,13 +185,12 @@ function render(){
   const minY=Math.min(-2.5, ...pts.map(p=>p[1]));
   const maxY=Math.max(Math.max(LX,LY), ...pts.map(p=>p[1]));
   
-  // Marges légèrement réduites pour maximiser le dessin
   const mx = W < 600 ? 12 : 48, my = H < 400 ? 20 : 36;
   const S = Math.max(8, Math.min((W-2*mx)/(maxX-minX), (H-2*my)/(maxY-minY), 120));
   const ox = (W - (maxX+minX)*S)/2, oy = (H + (maxY+minY)*S)/2;
   const T = p => [ox+p[0]*S, oy-p[1]*S];
 
-  const K = Math.min(1.15, Math.max(0.65, S/36)); // Borne inférieure baissée à 0.65 pour les très petits écrans
+  const K = Math.min(1.15, Math.max(0.65, S/36));
   const CM = 49*K, LW = 1.6*K, DOT = 3.4*K;
   const DASH1 = `${(3.6*K).toFixed(1)} ${(5.2*K).toFixed(1)}`;
   svg.style.setProperty("--fs", (18*K).toFixed(1)+"px");
@@ -230,6 +264,21 @@ function render(){
 
   svg.innerHTML = out.join("");
 
+  // Calcul de la ViewBox de base
+  const marginX = mx / S;
+  const marginY = my / S;
+  baseVB = {
+    x: minX - marginX,
+    y: minY - marginY,
+    w: (maxX - minX) + 2 * marginX,
+    h: (maxY - minY) + 2 * marginY
+  };
+  
+  // Si l'utilisateur n'a pas zoomé/déplacé, on applique la base
+  if (!currentVB) {
+    applyVB();
+  }
+
   document.getElementById("res").innerHTML =
     `<span class="rouge"><i>x</i>′=${fr(sP,2)}</span>` +
     `<span class="vert"><i>y</i>′=${fr(tP,2)}</span>` +
@@ -260,18 +309,114 @@ for (const k in champs){
   nb.addEventListener("change", () => synchroniser());
 }
 
-/* ================= Bouton Paramètres ================= */
+/* ================= Boutons En-tête ================= */
 const btn = document.getElementById("toggle"), main = document.getElementById("panneau");
 btn.addEventListener("click", () => {
   const cache = main.classList.toggle("sans-panneau");
-  btn.textContent = cache ? "Masqués" : "Affichés";
+  btn.textContent = cache ? "Affichés" : "Masqués";
   btn.setAttribute("aria-expanded", String(!cache));
-  render();
+  setTimeout(render, 50); // Petit délai pour laisser le CSS appliquer le changement de taille
 });
+document.getElementById("resetView").addEventListener("click", resetView);
+
+/* ================= Gestion Zoom / Pan ================= */
+function getVB() {
+  const parts = svg.getAttribute('viewBox').split(' ').map(Number);
+  return { x: parts[0], y: parts[1], w: parts[2], h: parts[3] };
+}
+
+// 1. Panoramique (Souris et Tactile 1 doigt)
+svg.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  isDragging = true;
+  lastPointer = { x: e.clientX, y: e.clientY };
+  svg.setPointerCapture(e.pointerId);
+  svg.style.cursor = 'grabbing';
+});
+
+svg.addEventListener('pointermove', e => {
+  if (!isDragging) return;
+  e.preventDefault();
+  const dx = e.clientX - lastPointer.x;
+  const dy = e.clientY - lastPointer.y;
+  lastPointer = { x: e.clientX, y: e.clientY };
+
+  const vb = currentVB || baseVB;
+  const scale = vb.w / fig.clientWidth;
+  
+  if (!currentVB) currentVB = { ...baseVB };
+  currentVB.x -= dx * scale;
+  currentVB.y -= dy * scale;
+  applyVB();
+});
+
+svg.addEventListener('pointerup', e => {
+  isDragging = false;
+  svg.releasePointerCapture(e.pointerId);
+  svg.style.cursor = 'grab';
+});
+
+// 2. Zoom Molette (PC)
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  const zoomFactor = e.deltaY > 0 ? 1.15 : 0.85;
+  const vb = currentVB || baseVB;
+  if (!currentVB) currentVB = { ...baseVB };
+
+  const rect = fig.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+  
+  // Coordonnées de la souris dans l'espace SVG
+  const mouseXCoord = vb.x + (mouseX / rect.width) * vb.w;
+  const mouseYCoord = vb.y + (mouseY / rect.height) * vb.h;
+
+  currentVB.w *= zoomFactor;
+  currentVB.h *= zoomFactor;
+  currentVB.x = mouseXCoord - (mouseX / rect.width) * currentVB.w;
+  currentVB.y = mouseYCoord - (mouseY / rect.height) * currentVB.h;
+  applyVB();
+}, { passive: false });
+
+// 3. Zoom Pincement (Mobile Tactile)
+svg.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    initialPinchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    initialPinchVB = { ...(currentVB || baseVB) };
+  }
+}, { passive: false });
+
+svg.addEventListener('touchmove', e => {
+  if (e.touches.length === 2) {
+    e.preventDefault(); // Empêche le scroll de la page
+    const dist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    const scale = initialPinchDist / dist;
+    if (!currentVB) currentVB = { ...baseVB };
+
+    const rect = fig.getBoundingClientRect();
+    const centerX = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left) / rect.width;
+    const centerY = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top) / rect.height;
+
+    currentVB.w = initialPinchVB.w * scale;
+    currentVB.h = initialPinchVB.h * scale;
+    currentVB.x = initialPinchVB.x + initialPinchVB.w * centerX - currentVB.w * centerX;
+    currentVB.y = initialPinchVB.y + initialPinchVB.h * centerY - currentVB.h * centerY;
+    applyVB();
+  }
+}, { passive: false });
 
 /* ================= Initialisation ================= */
 synchroniser();
-new ResizeObserver(render).observe(fig);
+new ResizeObserver(() => {
+  currentVB = null; // Réinitialise le zoom au redimensionnement de la fenêtre
+  render();
+}).observe(fig);
 render();
 </script>
 </body>

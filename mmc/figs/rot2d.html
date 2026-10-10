@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rotation de repère en 2D</title>
+<style>
+  :root{
+    color-scheme: light;
+    --fg:#1b1d21; --muted:#5b6068; --card:#f4f6f9; --line:#d3d8df; --accent:#0040d9;
+    --rougeF:#820303; --rougeC:#cc3380; --vertF:#0f660f; --vertC:#739e5e; --bleu:#0040d9;
+  }
+  *{box-sizing:border-box}
+  html{margin:0}
+  body{margin:0;min-height:100dvh;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--fg);background:#fff;
+       display:flex;flex-direction:column;
+       padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+  header{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;padding:.7rem 1rem;border-bottom:1px solid var(--line)}
+  header .titre{flex:1 1 320px;min-width:0}
+  h1{font-size:1.2rem;margin:0;line-height:1.25}
+  header .sous{font-size:.88rem;color:var(--muted);margin-top:.15rem}
+  header a{color:var(--accent)}
+  .ctl{display:flex;align-items:center;gap:.5rem;font-size:.95rem}
+  button#toggle{font:inherit;font-size:.9rem;padding:.4rem .8rem;border:1px solid var(--line);border-radius:8px;
+       background:var(--card);color:var(--fg);cursor:pointer;min-width:5.6rem}
+  button#toggle:hover{border-color:var(--accent)}
+
+  main{flex:1;display:grid;grid-template-columns:1fr 280px;min-height:480px}
+  main.sans-panneau{grid-template-columns:1fr}
+  .gauche{display:flex;flex-direction:column;min-width:0}
+  #fig{position:relative;flex:1;min-width:0;min-height:420px}
+  svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+  svg text{font-family:"Times New Roman","STIX Two Text",Times,serif;font-style:italic;font-size:var(--fs,18px)}
+  svg text .sub{font-style:normal;font-weight:bold;font-size:calc(var(--fs,18px)*0.67)}
+
+  aside{border-left:1px solid var(--line);background:var(--card);padding:.9rem 1rem}
+  main.sans-panneau aside{display:none}
+  .ligne{display:grid;grid-template-columns:3rem 1fr 4.6rem;align-items:center;gap:.5rem;margin:.55rem 0}
+  .ligne label{font-family:"Times New Roman",Times,serif;font-style:italic;font-size:1.1rem}
+  .ligne input[type=range]{width:100%;min-width:0}
+  .ligne input[type=number]{width:100%;font:inherit;font-size:.9rem;padding:.2rem .3rem;border:1px solid var(--line);border-radius:6px}
+  .res{display:flex;flex-wrap:wrap;justify-content:center;gap:.1rem 1.7rem;padding:.55rem 1rem;
+       border-bottom:1px solid var(--line);font-family:"Times New Roman",Times,serif;font-size:1.12rem;line-height:1.6}
+  .res span{white-space:nowrap}
+  .res i{font-style:italic}
+  .res .rouge{color:var(--rougeC)} .res .vert{color:var(--vertC)} .res .bleu{color:var(--bleu)}
+  .res .val{font-variant-numeric:tabular-nums}
+
+  /* Fenêtre étroite : le panneau passe au-dessus de la figure et la page défile (rien n'est coupé) */
+  @media (max-width:760px){
+    main{grid-template-columns:1fr;min-height:0;flex:none}
+    aside{order:-1;border-left:0;border-bottom:1px solid var(--line)}
+    #fig{flex:none;min-height:0;height:clamp(300px,74vw,560px)}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="titre">
+    <h1>Rotation de repère en 2D</h1>
+    <div class="sous">(version interactive en ligne de la <a id="lien" href="#">figure du cours (PDF)</a>)</div>
+  </div>
+  <div class="ctl"><span>Paramètres :</span>
+    <button id="toggle" type="button" aria-expanded="true" aria-controls="panneau">Affichés</button>
+  </div>
+</header>
+
+<main id="main">
+  <div class="gauche">
+    <div class="res" id="res"></div>
+    <div id="fig"><svg id="svg" role="img" aria-label="Rotation de repère en 2D : projections d'un point P"></svg></div>
+  </div>
+
+  <aside id="panneau">
+    <div class="ligne">
+      <label for="nx">P<sub>x</sub></label>
+      <input id="rx" type="range" min="0.5" max="5.5" step="0.05">
+      <input id="nx" type="number" min="0.5" max="5.5" step="0.05">
+    </div>
+    <div class="ligne">
+      <label for="ny">P<sub>y</sub></label>
+      <input id="ry" type="range" min="0.5" max="5.5" step="0.05">
+      <input id="ny" type="number" min="0.5" max="5.5" step="0.05">
+    </div>
+    <div class="ligne">
+      <label for="nt">θ (°)</label>
+      <input id="rt" type="range" min="0" max="90" step="0.5">
+      <input id="nt" type="number" min="0" max="90" step="0.5">
+    </div>
+
+  </aside>
+</main>
+
+<script>
+/* ---------- À adapter : lien vers le PDF du cours ---------- */
+const PDF_URL  = "https://a-seghir.github.io/mmc/chap1.pdf";
+const PDF_TEXT = "figure du cours (PDF)";
+
+/* ---------- Valeurs initiales (celles de la figure TikZ) ---------- */
+const etat = { x: 3.75, y: 5.0, th: 28 };
+
+/* ---------- Palette (identique à la figure TikZ) ---------- */
+const C = { rougeF:"#820303", rougeC:"#cc3380", vertF:"#0f660f", vertC:"#739e5e", bleu:"#0040d9", noir:"#111" };
+
+/* ---------- Longueurs minimales des axes (en unités) : la figure ne bouge pas ----------
+   OX et OX' mesurent LX, OY et OY' mesurent LY. Tant que Px, Py ≤ PMAX,
+   x' + 1 ≤ LX et y' + 1 ≤ LY : les longueurs sont donc constantes. */
+const LX = 9, LY = 7, PMAX = 5.5;
+
+const svg = document.getElementById("svg");
+const fig = document.getElementById("fig");
+document.getElementById("lien").href = PDF_URL;
+document.getElementById("lien").textContent = PDF_TEXT;
+
+const rad = d => d*Math.PI/180;
+const f1 = n => n.toFixed(1);
+const fr = (n,d) => n.toFixed(d).replace(".", ",").replace("-", "−");
+
+/* ================= Dessin ================= */
+function render(){
+  const W = fig.clientWidth || 800, H = fig.clientHeight || 500;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+  const {x, y} = etat, th = rad(etat.th), c = Math.cos(th), s = Math.sin(th);
+  const sP = x*c + y*s, tP = -x*s + y*c;                // coordonnées de P dans (x',y')
+
+  // longueurs des axes (en unités) : minimales et constantes
+  const Lx  = Math.max(LX, x + 2.5);
+  const Ly  = Math.max(LY, y + 1);
+  const Lxp = Math.max(LX, sP + 1, x + 1);
+  const Lyp = Math.max(LY, tP + 1, y + 1);
+
+  // points (unités)
+  const O=[0,0], Xa=[Lx,0], Ya=[0,Ly], Xp=[Lxp*c, Lxp*s], Yp=[-Lyp*s, Lyp*c];
+  const P=[x,y], Px=[x,0], Py=[0,y];
+  const Pxp=[sP*c, sP*s], Pyp=[-tP*s, tP*c];
+  const tail = tP < 0 ? [-(tP-0.8)*s, (tP-0.8)*c] : null; // prolongement de OY' si y' < 0
+
+  // cadrage FIXE : emprise maximale des axes quand θ varie de 0° à 90°
+  // (on n'élargit que dans le cas extrême où y' < 0 dépasse la réserve du bas)
+  const pts=[O,Xa,Ya,Xp,Yp,P]; if(tail) pts.push(tail);
+  const minX=Math.min(-LY, ...pts.map(p=>p[0]));
+  const maxX=Math.max(LX, ...pts.map(p=>p[0]));
+  const minY=Math.min(-2.5, ...pts.map(p=>p[1]));
+  const maxY=Math.max(Math.max(LX,LY), ...pts.map(p=>p[1]));
+  const mx=56, my=44;
+  const S = Math.max(8, Math.min((W-2*mx)/(maxX-minX), (H-2*my)/(maxY-minY), 120));
+  const ox = (W - (maxX+minX)*S)/2, oy = (H + (maxY+minY)*S)/2;
+  const T = p => [ox+p[0]*S, oy-p[1]*S];
+
+  /* facteur d'échelle des textes, traits et décalages : la figure reste proportionnée
+     (fenêtre réduite -> tout rétrécit ensemble, sans s'écraser) */
+  const K = Math.min(1.15, Math.max(0.62, S/36));
+  const CM = 49*K, LW = 1.6*K, DOT = 3.4*K;
+  const DASH1 = `${(3.6*K).toFixed(1)} ${(5.2*K).toFixed(1)}`;
+  svg.style.setProperty("--fs", (18*K).toFixed(1)+"px");
+
+  const o=T(O), xa=T(Xa), ya=T(Ya), xp=T(Xp), yp=T(Yp), p=T(P);
+  const pX=T(Px), pY=T(Py), pXp=T(Pxp), pYp=T(Pyp);
+  const polar = (q, r, deg) => [q[0]+r*Math.cos(rad(deg)), q[1]-r*Math.sin(rad(deg))];
+
+  const out = [];
+  const line = (q1,q2,col,dash) => out.push(`<line x1="${f1(q1[0])}" y1="${f1(q1[1])}" x2="${f1(q2[0])}" y2="${f1(q2[1])}" stroke="${col}" stroke-width="${LW.toFixed(2)}"${dash?` stroke-dasharray="${dash}"`:""}/>`);
+  const dot  = (q,col,r=DOT) => out.push(`<circle cx="${f1(q[0])}" cy="${f1(q[1])}" r="${r.toFixed(2)}" fill="${col}"/>`);
+  const head = (tip, ang, col, L, Wd) => {                // pointe de flèche, ang = direction (rad, écran)
+    const d=[Math.cos(ang), Math.sin(ang)], n=[-d[1], d[0]];
+    const b0=[tip[0]-L*d[0], tip[1]-L*d[1]], nt=[tip[0]-0.7*L*d[0], tip[1]-0.7*L*d[1]];
+    const c1=[b0[0]+Wd/2*n[0], b0[1]+Wd/2*n[1]], c2=[b0[0]-Wd/2*n[0], b0[1]-Wd/2*n[1]];
+    out.push(`<polygon points="${f1(tip[0])},${f1(tip[1])} ${f1(c1[0])},${f1(c1[1])} ${f1(nt[0])},${f1(nt[1])} ${f1(c2[0])},${f1(c2[1])}" fill="${col}"/>`);
+  };
+  const arrow = (q1,q2,col) => {                          // trait + pointe en q2
+    const L=14*K, Wd=10*K, ang=Math.atan2(q2[1]-q1[1], q2[0]-q1[0]);
+    const e=[q2[0]-0.7*L*Math.cos(ang), q2[1]-0.7*L*Math.sin(ang)];
+    line(q1,e,col); head(q2,ang,col,L,Wd);
+  };
+  const arcArrow = (ctr, r, a0, a1, col) => {            // arc anti-horaire (angles mathématiques, degrés)
+    if (a1-a0 < 3) return;
+    const L=8*K, Wd=6*K, a1s = a1 - (0.7*L/r)*180/Math.PI;
+    const P0=polar(ctr,r,a0), P1=polar(ctr,r,a1s);
+    out.push(`<path d="M${f1(P0[0])},${f1(P0[1])} A${r.toFixed(1)},${r.toFixed(1)} 0 0 0 ${f1(P1[0])},${f1(P1[1])}" fill="none" stroke="${col}" stroke-width="${LW.toFixed(2)}"/>`);
+    const tip=polar(ctr,r,a1);
+    head(tip, Math.atan2(-Math.cos(rad(a1)), -Math.sin(rad(a1))), col, L, Wd);
+  };
+  // texte : centré par défaut ; {bw:true} = ancre « base west » ; {bold:true}
+  const txt = (q, html, col, o={}) => out.push(
+    `<text x="${f1(q[0])}" y="${f1(q[1])}" fill="${col}" text-anchor="${o.bw?"start":"middle"}" dy="${o.bw?0:"0.35em"}"${o.bold?' font-weight="bold"':""}>${html}</text>`);
+  const sub = n => `<tspan class="sub" dy="${(5*K).toFixed(1)}">${n}</tspan>`;
+
+  /* --- lignes de projection (pointillés) --- */
+  line(pX,p,C.vertF,DASH1);
+  line(pY,p,C.rougeF,DASH1);
+  line(pXp,p,C.vertC,DASH1);
+  line(pYp,p,C.rougeC,DASH1);
+
+  /* --- axes --- */
+  if (tail) line(o,T(tail),C.vertC);
+  arrow(o,xa,C.rougeF);
+  arrow(o,ya,C.vertF);
+  arrow(o,xp,C.rougeC);
+  arrow(o,yp,C.vertC);
+
+  /* --- vecteurs unitaires --- */
+  const e1=T([2,0]), e2=T([0,2]), e1p=T([2*c,2*s]), e2p=T([-2*s,2*c]);
+  arrow(o,e1,C.rougeF); arrow(o,e2,C.vertF); arrow(o,e1p,C.rougeC); arrow(o,e2p,C.vertC);
+
+  /* --- angles θ en O --- */
+  arcArrow(o, CM, 0, etat.th, C.bleu);
+  arcArrow(o, CM, 90, 90+etat.th, C.bleu);
+  if (etat.th >= 3){
+    txt(polar(o,1.35*CM,etat.th/2), "θ", C.bleu);
+    txt(polar(o,1.35*CM,90+etat.th/2), "θ", C.bleu);
+  }
+
+  /* --- origine --- */
+  dot(o,C.noir,3.2*K);
+  out.push(`<text x="${f1(o[0]-4*K)}" y="${f1(o[1]+4*K)}" fill="${C.noir}" text-anchor="end" dy="0.8em">o</text>`);
+
+  /* --- étiquettes des axes --- */
+  txt([xa[0]+0.14*CM, xa[1]], "X", C.rougeF, {bw:true});
+  txt([ya[0]+0.09*CM, ya[1]-0.08*CM], "Y", C.vertF, {bw:true});
+  txt(polar(xp,0.35*CM,etat.th), "X′", C.rougeC);
+  txt(polar(yp,0.35*CM,etat.th+90), "Y′", C.vertC);
+
+  /* --- points de projection de P --- */
+  dot(p,C.noir); dot(pX,C.rougeF); dot(pXp,C.rougeC); dot(pY,C.vertF); dot(pYp,C.vertC);
+
+  /* --- coordonnées --- */
+  txt([pX[0]-0.1*CM, pX[1]+0.4*CM], "x", C.rougeF, {bw:true});
+  txt([pY[0]-0.3*CM, pY[1]], "y", C.vertF, {bw:true});
+  txt(polar(pXp,0.3*CM,etat.th-90), "x′", C.rougeC);
+  txt(polar(pYp,0.3*CM,etat.th+180), "y′", C.vertC);
+  txt([p[0]+0.1*CM, p[1]-0.1*CM], "P", C.noir, {bw:true});
+
+  /* --- étiquettes des vecteurs unitaires --- */
+  txt([e1[0]-0.33*CM, e1[1]+0.32*CM], `e${sub(1)}`, C.rougeF, {bw:true, bold:true});
+  txt([e2[0]+0.19*CM, e2[1]+0.2*CM], `e${sub(2)}`, C.vertF, {bw:true, bold:true});
+  txt(polar(e1p,0.3*CM,etat.th+90), `e′${sub(1)}`, C.rougeC, {bold:true});
+  { const d = polar([0,0],0.3*CM,etat.th); txt([e2p[0]-d[0], e2p[1]-d[1]], `e′${sub(2)}`, C.vertC, {bold:true}); }
+
+  svg.innerHTML = out.join("");
+
+  /* --- affichage des valeurs --- */
+  document.getElementById("res").innerHTML =
+    `<span class="rouge"><i>x</i>′ = ${fr(sP,3)}</span>` +
+    `<span class="vert"><i>y</i>′ = ${fr(tP,3)}</span>` +
+    `<span class="bleu">cos <i>θ</i> = ${fr(c,4)}</span>` +
+    `<span class="bleu">sin <i>θ</i> = ${fr(s,4)}</span>`;
+}
+
+/* ================= Panneau de réglage ================= */
+const champs = {
+  x:  [document.getElementById("rx"), document.getElementById("nx"), 0.5, PMAX],
+  y:  [document.getElementById("ry"), document.getElementById("ny"), 0.5, PMAX],
+  th: [document.getElementById("rt"), document.getElementById("nt"), 0, 90],
+};
+function synchroniser(){
+  for (const k in champs){ champs[k][0].value = etat[k]; champs[k][1].value = etat[k]; }
+}
+for (const k in champs){
+  const [rg, nb, mn, mx] = champs[k];
+  const maj = v => {
+    if (!isFinite(v)) return;
+    etat[k] = Math.min(mx, Math.max(mn, v));
+    if (document.activeElement !== rg) rg.value = etat[k];
+    if (document.activeElement !== nb) nb.value = etat[k];
+    render();
+  };
+  rg.addEventListener("input", () => { nb.value = rg.value; maj(parseFloat(rg.value)); });
+  nb.addEventListener("input", () => { rg.value = nb.value; maj(parseFloat(nb.value)); });
+  nb.addEventListener("change", () => synchroniser());
+}
+
+/* ================= Bouton Paramètres : Affichés / Masqués ================= */
+const btn = document.getElementById("toggle"), main = document.getElementById("main");
+btn.addEventListener("click", () => {
+  const cache = main.classList.toggle("sans-panneau");
+  btn.textContent = cache ? "Masqués" : "Affichés";
+  btn.setAttribute("aria-expanded", String(!cache));
+  render();
+});
+
+/* ================= Initialisation ================= */
+synchroniser();
+new ResizeObserver(render).observe(fig);
+render();
+</script>
+</body>
+</html>

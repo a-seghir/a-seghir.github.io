@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rotations de repère combinées (3D) : R = Ry·Rx·Rz</title>
+<style>
+  :root{color-scheme:light;--fg:#1b1d21;--muted:#5b6068;--card:#f4f6f9;--line:#d3d8df;--accent:#0040d9}
+  *{box-sizing:border-box}
+  html{margin:0}
+  body{margin:0;min-height:100dvh;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--fg);background:#fff;
+       display:flex;flex-direction:column;
+       padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+  header{display:flex;align-items:center;gap:.6rem;padding:.35rem .75rem;border-bottom:1px solid var(--line)}
+  header .titre{flex:1;min-width:0}
+  h1{font-size:1.05rem;margin:0;line-height:1.2}
+  header .sous{font-size:.78rem;color:var(--muted);line-height:1.25}
+  header a{color:var(--accent)}
+  .ctl{display:flex;align-items:center;gap:.4rem;font-size:.85rem;white-space:nowrap;flex-wrap:wrap;justify-content:flex-end}
+  .ctl .grp{display:flex;align-items:center;gap:.4rem}
+  .ctl button,.ctrl button{min-width:4.6rem;font:inherit;font-size:.82rem;padding:.25rem .6rem;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--fg);cursor:pointer}
+  .ctl button:hover{border-color:var(--accent)}
+  .barre{display:flex;flex-wrap:wrap;align-items:center;gap:.1rem 1.4rem;padding:.3rem .75rem;background:var(--card);border-bottom:1px solid var(--line)}
+  .ctrl{display:flex;align-items:center;gap:.4rem;flex:0 1 17rem;min-width:0}
+  .ctrl label{width:2.2rem;font-family:"Times New Roman",Times,serif;font-style:italic;font-size:1rem;white-space:nowrap}
+  .ctrl input[type=range]{flex:1;min-width:0;margin:0;height:1.3rem}
+  .ctrl input[type=number]{width:3.8rem;font:inherit;font-size:.82rem;padding:.1rem .25rem;border:1px solid var(--line);border-radius:6px}
+  .ctrl button{padding:.2rem .6rem;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--fg);cursor:pointer}
+  .ctrl button:hover{border-color:var(--accent)}
+  .ctrl.proj{gap:.5rem;font-size:.85rem}
+  .barre.sans-panneau .ctrl{display:none}
+  .res{flex:1 1 22rem;display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.2rem;font-family:"Times New Roman",Times,serif;font-size:.98rem;line-height:1.45}
+  .res span{white-space:nowrap}
+  .res .rouge{color:#d62828}.res .vert{color:#2a9d2a}.res .bleu{color:#1f4fe0}
+  #fig{position:relative;flex:1;min-width:0;min-height:300px;overflow:hidden}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+  canvas:active{cursor:grabbing}
+  .lab{position:absolute;left:0;top:0;pointer-events:none;white-space:nowrap;will-change:transform;
+       font-family:"Times New Roman","STIX Two Text",Times,serif;font-style:italic;font-size:18px;line-height:1;text-shadow:0 0 3px #fff,0 0 3px #fff}
+  .lab sub{font-style:normal;font-weight:bold;font-size:.67em;vertical-align:baseline;position:relative;top:.3em}
+  #rst{position:absolute;right:.5rem;bottom:.5rem;width:2rem;height:2rem;padding:0;border:1px solid var(--line);border-radius:8px;
+       background:rgba(255,255,255,.9);color:var(--fg);font-size:1.1rem;cursor:pointer}
+  #rst:hover{border-color:var(--accent)}
+  @media (max-width:600px){
+    header{display:grid;grid-template-columns:1fr auto;gap:0 .6rem;align-items:center;padding:.3rem .6rem}
+    header .titre{display:contents}
+    h1{grid-column:1/-1;font-size:.98rem}
+    header .sous{grid-column:1;font-size:.72rem}
+    .ctl{grid-column:2;grid-row:2}
+    .barre{padding:.25rem .6rem}
+    .res{font-size:.9rem;gap:0 .9rem}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="titre">
+    <h1>Rotations de repère combinées (3D)</h1>
+    <div class="sous"><b>R = (R<sub>z</sub>, R<sub>x</sub>, R<sub>y</sub>) : R = R<sub>y</sub> · R<sub>x</sub> · R<sub>z</sub></b><br>
+      avec R<sub>z</sub>(θ), R<sub>x</sub>(φ), R<sub>y</sub>(ψ) : θ autour de oZ, puis φ autour de X<sub>1</sub>, puis ψ autour de Y<sub>2</sub> (axes mobiles) ·
+      <a id="lien" href="#">figure du cours (PDF)</a></div>
+  </div>
+  <div class="ctl">
+    <span class="grp"><span>Repères intermédiaires :</span><button id="inter" type="button">Affichés</button></span>
+    <span class="grp"><span>Paramètres :</span><button id="toggle" type="button" aria-expanded="true" aria-controls="panneau">Affichés</button></span>
+  </div>
+</header>
+
+<section class="barre" id="panneau"><div class="res" id="res"></div></section>
+
+<div id="fig"><button id="rst" type="button" aria-label="Réinitialiser la vue" title="Réinitialiser la vue">↺</button></div>
+
+<!--
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+-->
+<script src="../../js/three.min.js"></script>
+
+<script>
+document.getElementById("lien").href = "https://a-seghir.github.io/mmc/chap1.pdf";
+
+const etat = { x:3.75, y:5.0, z:2.5, th:28, ph:20, ps:15 };
+const fr = (n,d) => n.toFixed(d).replace(".", ",").replace("-", "−");
+const rad = d => d*Math.PI/180;
+
+/* Couleurs : ox rouge, oy vert, oz bleu (axes mobiles : tons clairs) */
+const R="#d62828", Rc="#ff8f98", Rd="#7a0f12", G="#2a9d2a", Gc="#9be08f", Gd="#0d5c0d", B="#1f4fe0", Bc="#86a2f5", Bd="#12308f", OR="#f08c00";
+const Rt="#e0525e", Gt="#5db04d", Bt="#5b83ee";
+const LEN = 7;
+
+/* ---------- Panneau de réglage (généré) ---------- */
+const defs = [["x","P<sub>x</sub>",0.5,5.5,0.05],["y","P<sub>y</sub>",0.5,5.5,0.05],["z","P<sub>z</sub>",0.5,5.5,0.05],
+              ["th","θ (°)",-90,90,0.5],["ph","φ (°)",-90,90,0.5],["ps","ψ (°)",-90,90,0.5]];
+const panneau = document.getElementById("panneau"), champs = {};
+for (const [k,lb,mn,mx,st] of defs){
+  const d = document.createElement("div"); d.className = "ctrl";
+  d.innerHTML = `<label for="n_${k}">${lb}</label><input id="r_${k}" type="range" min="${mn}" max="${mx}" step="${st}"><input id="n_${k}" type="number" min="${mn}" max="${mx}" step="${st}">`;
+  panneau.insertBefore(d, document.getElementById("res"));
+  champs[k] = [d.children[1], d.children[2], mn, mx];
+}
+const synchroniser = () => { for (const k in champs){ champs[k][0].value = etat[k]; champs[k][1].value = etat[k]; } };
+for (const k in champs){
+  const [rg, nb, mn, mx] = champs[k];
+  const set = v => {
+    if (!isFinite(v)) return;
+    etat[k] = Math.min(mx, Math.max(mn, v));
+    if (document.activeElement !== rg) rg.value = etat[k];
+    if (document.activeElement !== nb) nb.value = etat[k];
+    maj();
+  };
+  rg.addEventListener("input", () => { nb.value = rg.value; set(parseFloat(rg.value)); });
+  nb.addEventListener("input", () => { rg.value = nb.value; set(parseFloat(nb.value)); });
+  nb.addEventListener("change", synchroniser);
+}
+
+/* ---------- Scène ---------- */
+const fig = document.getElementById("fig");
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+renderer.setClearColor(0xffffff, 1);
+fig.insertBefore(renderer.domElement, fig.firstChild);
+const cv = renderer.domElement;
+const scene = new THREE.Scene();
+const persp = new THREE.PerspectiveCamera(38, 1, 0.1, 200), ortho = new THREE.OrthographicCamera(-1,1,1,-1,0.1,200);
+let camera = persp;
+persp.up.set(0,0,1); ortho.up.set(0,0,1); scene.add(persp, ortho);
+scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+const lum = new THREE.DirectionalLight(0xffffff, 0.55); lum.position.set(0.4,0.3,1); camera.add(lum);
+
+const mats = {};
+const mat = (c,o=1) => mats[c+o] || (mats[c+o] = new THREE.MeshLambertMaterial({ color:c, transparent:o<1, opacity:o }));
+const Y = new THREE.Vector3(0,1,0), V = (a,b,c) => new THREE.Vector3(a,b,c);
+
+function fleche(dir, len, col, r, hr, hl, o=1){
+  const g = new THREE.Group();
+  const cyl = new THREE.Mesh(new THREE.CylinderGeometry(r,r,len-hl,12), mat(col,o)); cyl.position.y = (len-hl)/2;
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(hr,hl,18), mat(col,o)); cone.position.y = len-hl/2;
+  g.add(cyl, cone); g.quaternion.setFromUnitVectors(Y, dir.clone().normalize()); return g;
+}
+const sphere = (p, col, r) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r,20,14), mat(col)); m.position.copy(p); return m; };
+const pointille = (a, b, col) => {
+  const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,b]), new THREE.LineDashedMaterial({ color:col, dashSize:0.14, gapSize:0.12 }));
+  l.computeLineDistances(); return l;
+};
+const vider = g => { while (g.children.length){ const o = g.children.pop();
+  o.traverse(n => { if (n.geometry) n.geometry.dispose(); if (n.material && n.material.isLineDashedMaterial) n.material.dispose(); }); } };
+
+/* R = Ry(ψ)·Rx(φ)·Rz(θ) : g1 (θ autour de Z) ⊃ g2 (φ autour de X₁) ⊃ g3 (ψ autour de Y₂) */
+const g1 = new THREE.Group(), g2 = new THREE.Group(), g3 = new THREE.Group();
+scene.add(g1); g1.add(g2); g2.add(g3);
+
+/* Carré (plan d'une rotation) lié au repère qui le porte */
+function carre(plan){
+  const g = new THREE.Group();
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(LEN,LEN), new THREE.MeshBasicMaterial({ color:OR, transparent:true, opacity:0.08, side:THREE.DoubleSide, depthWrite:false }));
+  const q = { xy:[[0,0,0],[1,0,0],[1,1,0],[0,1,0]], yz:[[0,0,0],[0,1,0],[0,1,1],[0,0,1]], zx:[[0,0,0],[1,0,0],[1,0,1],[0,0,1]] }[plan];
+  if (plan==="yz") m.rotation.y = Math.PI/2; if (plan==="zx") m.rotation.x = Math.PI/2;
+  m.position.set(...{ xy:[LEN/2,LEN/2,0], yz:[0,LEN/2,LEN/2], zx:[LEN/2,0,LEN/2] }[plan]);
+  g.add(m, new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(q.map(p => V(p[0]*LEN,p[1]*LEN,p[2]*LEN))), new THREE.LineBasicMaterial({ color:OR })));
+  return g;
+}
+
+/* Décor : grille du plan XY fixe, repère fixe */
+const grille = new THREE.GridHelper(14, 14, 0xc9ced6, 0xe4e7ec);
+grille.rotation.x = Math.PI/2; grille.position.z = -0.01; scene.add(grille);
+scene.add(fleche(V(1,0,0), LEN, R, 0.045, 0.13, 0.4), fleche(V(0,1,0), LEN, G, 0.045, 0.13, 0.4), fleche(V(0,0,1), LEN, B, 0.045, 0.13, 0.4));
+scene.add(fleche(V(1,0,0), 2, Rd, 0.07, 0.16, 0.3), fleche(V(0,1,0), 2, Gd, 0.07, 0.16, 0.3), fleche(V(0,0,1), 2, Bd, 0.07, 0.16, 0.3));
+scene.add(sphere(V(0,0,0), "#111", 0.1));
+
+/* Repère intermédiaire 1 (après θ) : X₁, Y₁ */
+const I1 = new THREE.Group(); g1.add(I1);
+I1.add(fleche(V(1,0,0), LEN, Rc, 0.025, 0.09, 0.35, 0.6), fleche(V(0,1,0), LEN, Gc, 0.025, 0.09, 0.35, 0.6));
+/* Repère intermédiaire 2 (après φ) : Y₂, Z₂ */
+const I2 = new THREE.Group(); g2.add(I2);
+I2.add(fleche(V(0,1,0), LEN, Gc, 0.025, 0.09, 0.35, 0.6), fleche(V(0,0,1), LEN, Bc, 0.025, 0.09, 0.35, 0.6));
+/* Repère final (après ψ) : X′, Y′ (= Y₂), Z′ */
+g3.add(fleche(V(1,0,0), LEN, Rc, 0.035, 0.11, 0.4), fleche(V(0,1,0), LEN, Gc, 0.035, 0.11, 0.4), fleche(V(0,0,1), LEN, Bc, 0.035, 0.11, 0.4));
+g3.add(fleche(V(1,0,0), 2, Rc, 0.06, 0.14, 0.3), fleche(V(0,1,0), 2, Gc, 0.06, 0.14, 0.3), fleche(V(0,0,1), 2, Bc, 0.06, 0.14, 0.3));
+g3.add(carre("xy"), carre("yz"), carre("zx"));   // les 3 plans jaunes, rigidement liés au repère X′Y′Z′ (arêtes communes, sans vide)
+
+/* Groupes dynamiques : point P et arcs des trois angles */
+const dyn = new THREE.Group(), A0 = new THREE.Group(), A1 = new THREE.Group(), A2 = new THREE.Group();
+scene.add(dyn, A0); g1.add(A1); g2.add(A2);
+
+const PL = {
+  xy:[a=>V(Math.cos(a),Math.sin(a),0), a=>V(-Math.sin(a),Math.cos(a),0)],
+  yz:[a=>V(0,Math.cos(a),Math.sin(a)), a=>V(0,-Math.sin(a),Math.cos(a))],
+  zx:[a=>V(Math.sin(a),0,Math.cos(a)), a=>V(Math.cos(a),0,-Math.sin(a))] };
+function arc(pl, a0, a1, Rr){
+  const [pf, tf] = PL[pl], sg = Math.sign(a1-a0), hl = 0.28, as = a1 - sg*hl/Rr, pts = [];
+  for (let i=0;i<=28;i++) pts.push(pf(a0+(as-a0)*i/28).multiplyScalar(Rr));
+  const gr = new THREE.Group();
+  gr.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.035, 8, false), mat(OR)));
+  const tg = tf(as).multiplyScalar(sg), cone = new THREE.Mesh(new THREE.ConeGeometry(0.1, hl, 16), mat(OR));
+  cone.position.copy(pts[28]).addScaledVector(tg, hl/2); cone.quaternion.setFromUnitVectors(Y, tg);
+  gr.add(cone); return gr;
+}
+
+/* ---------- Étiquettes (HTML projeté) ---------- */
+const labs = {};
+const sb = n => `<sub>${n}</sub>`;
+function lab(id, html, col, dx, dy, bold){
+  const el = document.createElement("div"); el.className = "lab"; el.innerHTML = html; el.style.color = col;
+  if (bold) el.style.fontWeight = "bold";
+  fig.appendChild(el); return labs[id] = { el, p:V(0,0,0), dx, dy, on:true };
+}
+lab("X","X",R,12,0).p.set(LEN,0,0);
+lab("Y","Y",G,10,-10).p.set(0,LEN,0);
+lab("Z","Z",B,-12,-14).p.set(0,0,LEN);
+lab("o","o","#111",-12,12);
+lab("e1","e"+sb(1),Rd,0,18,true).p.set(2,0,0);
+lab("e2","e"+sb(2),Gd,-16,0,true).p.set(0,2,0);
+lab("e3","e"+sb(3),Bd,-18,0,true).p.set(0,0,2);
+lab("Xp","X′",Rt,12,-4); lab("Yp","Y′",Gt,12,-8); lab("Zp","Z′",Bt,14,-14);
+lab("e1p","e′"+sb(1),Rt,0,-16,true); lab("e2p","e′"+sb(2),Gt,-18,0,true); lab("e3p","e′"+sb(3),Bt,20,0,true);
+lab("X1","X"+sb(1),Rt,12,6); lab("Y1","Y"+sb(1),Gt,12,6); lab("Y2","Y"+sb(2),Gt,-14,-10); lab("Z2","Z"+sb(2),Bt,-14,-14);
+lab("P","P","#111",12,-10);
+lab("x","x",R,0,16); lab("y","y",G,-14,0); lab("z","z",B,-14,0);
+lab("xp","x′",Rt,10,16); lab("yp","y′",Gt,-16,6); lab("zp","z′",Bt,-16,6);
+["θ","φ","ψ"].forEach((t,i) => { lab("a"+i+"a",t,OR,0,0); lab("a"+i+"b",t,OR,0,0); });
+function majLabels(){
+  const w = fig.clientWidth, h = fig.clientHeight, v = V(0,0,0);
+  for (const k in labs){
+    const L = labs[k]; v.copy(L.p).project(camera);
+    if (!L.on || v.z > 1){ L.el.style.display = "none"; continue; }
+    L.el.style.display = "";
+    L.el.style.transform = `translate(${((v.x*0.5+0.5)*w + L.dx).toFixed(1)}px,${((-v.y*0.5+0.5)*h + L.dy).toFixed(1)}px) translate(-50%,-50%)`;
+  }
+}
+
+/* ---------- Calcul et mise à jour ---------- */
+let inter = true;
+function maj(){
+  const { x, y, z } = etat, a = rad(etat.th), b = rad(etat.ph), g = rad(etat.ps);
+  g1.rotation.z = a; g2.rotation.x = b; g3.rotation.y = g;
+  I1.visible = I2.visible = inter;
+  scene.updateMatrixWorld(true);
+  const M = g3.matrixWorld;
+  const ex = V(0,0,0).setFromMatrixColumn(M,0), ey = V(0,0,0).setFromMatrixColumn(M,1), ez = V(0,0,0).setFromMatrixColumn(M,2);
+  const P = V(x,y,z), xp = P.dot(ex), yp = P.dot(ey), zp = P.dot(ez);      // coordonnées dans le repère final
+  const Px = V(x,0,0), Py = V(0,y,0), Pz = V(0,0,z);
+  const Pxp = ex.clone().multiplyScalar(xp), Pyp = ey.clone().multiplyScalar(yp), Pzp = ez.clone().multiplyScalar(zp);
+
+  vider(dyn); vider(A0); vider(A1); vider(A2);
+  dyn.add(pointille(Px,P,R), pointille(Py,P,G), pointille(Pz,P,B), pointille(Pxp,P,Rc), pointille(Pyp,P,Gc), pointille(Pzp,P,Bc));
+  dyn.add(sphere(Px,R,0.1), sphere(Py,G,0.1), sphere(Pz,B,0.1), sphere(Pxp,Rc,0.1), sphere(Pyp,Gc,0.1), sphere(Pzp,Bc,0.1), sphere(P,"#111",0.14));
+  const ang = [[a,"xy",A0,scene,1.3],[b,"yz",A1,g1,1.6],[g,"zx",A2,g2,1.9]];
+  ang.forEach(([t,pl,grp,par,Rr], i) => {
+    const on = Math.abs(t) >= rad(3);
+    if (on){ grp.add(arc(pl,0,t,Rr)); grp.add(arc(pl,Math.PI/2,Math.PI/2+t,Rr)); }
+    const pf = PL[pl][0];
+    [["a",t/2],["b",Math.PI/2+t/2]].forEach(([s,u]) => {
+      const L = labs["a"+i+s]; L.on = on; L.p.copy(pf(u).multiplyScalar(Rr+0.5)); par.localToWorld(L.p);
+    });
+  });
+  const W = (k, grp, v) => { labs[k].p.copy(v); grp.localToWorld(labs[k].p); };
+  W("Xp",g3,V(LEN,0,0)); W("Yp",g3,V(0,LEN,0)); W("Zp",g3,V(0,0,LEN));
+  W("e1p",g3,V(2,0,0)); W("e2p",g3,V(0,2,0)); W("e3p",g3,V(0,0,2));
+  W("X1",g1,V(LEN,0,0)); W("Y1",g1,V(0,LEN,0)); W("Y2",g2,V(0,LEN,0)); W("Z2",g2,V(0,0,LEN));
+  ["X1","Y1","Y2","Z2"].forEach(k => labs[k].on = inter);
+  labs.P.p.copy(P); labs.x.p.copy(Px); labs.y.p.copy(Py); labs.z.p.copy(Pz);
+  labs.xp.p.copy(Pxp); labs.yp.p.copy(Pyp); labs.zp.p.copy(Pzp);
+
+  document.getElementById("res").innerHTML =
+    `<span class="rouge"><i>x</i>′ = ${fr(xp,3)}</span><span class="vert"><i>y</i>′ = ${fr(yp,3)}</span><span class="bleu"><i>z</i>′ = ${fr(zp,3)}</span>`;
+  dessiner();
+}
+
+/* ---------- Caméra orbitale ---------- */
+const cible = V(2.2,2.2,2.4), cam0 = { az:-0.95, el:0.42, d:19 };
+const cam = { ...cam0 };
+function cadrer(){                       // fenêtre de chaque caméra (même cadrage en perspective et en orthographique)
+  const w = fig.clientWidth || 800, h = fig.clientHeight || 500, asp = w/h, hh = cam.d*Math.tan(rad(19));
+  persp.aspect = asp; persp.updateProjectionMatrix();
+  ortho.left = -hh*asp; ortho.right = hh*asp; ortho.top = hh; ortho.bottom = -hh; ortho.updateProjectionMatrix();
+}
+function placer(){
+  cadrer();
+  const ce = Math.cos(cam.el);
+  camera.position.set(cible.x + cam.d*ce*Math.cos(cam.az), cible.y + cam.d*ce*Math.sin(cam.az), cible.z + cam.d*Math.sin(cam.el));
+  camera.lookAt(cible);
+}
+let sale = false;
+function dessiner(){ if (sale) return; sale = true; requestAnimationFrame(() => { sale = false; placer(); renderer.render(scene, camera); majLabels(); }); }
+
+const ptrs = new Map(); let dist0 = 0;
+const ecart = () => { const [a,b] = [...ptrs.values()]; return Math.hypot(a[0]-b[0], a[1]-b[1]) || 1; };
+cv.addEventListener("pointerdown", e => { try{cv.setPointerCapture(e.pointerId);}catch(_){} ptrs.set(e.pointerId,[e.clientX,e.clientY]); if (ptrs.size===2) dist0 = ecart(); });
+cv.addEventListener("pointermove", e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const [px,py] = ptrs.get(e.pointerId);
+  ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+  if (ptrs.size === 1){
+    cam.az -= (e.clientX-px)*0.008;
+    cam.el = Math.min(1.5, Math.max(-0.2, cam.el + (e.clientY-py)*0.008));
+  } else if (ptrs.size === 2){
+    const d = ecart(); cam.d = Math.min(45, Math.max(6, cam.d*dist0/d)); dist0 = d;
+  }
+  dessiner();
+});
+const fin = e => { ptrs.delete(e.pointerId); if (ptrs.size===2) dist0 = ecart(); };
+cv.addEventListener("pointerup", fin); cv.addEventListener("pointercancel", fin);
+cv.addEventListener("wheel", e => { e.preventDefault(); cam.d = Math.min(45, Math.max(6, cam.d*Math.exp(e.deltaY*0.0012))); dessiner(); }, { passive:false });
+const reinit = () => { Object.assign(cam, cam0); dessiner(); };
+cv.addEventListener("dblclick", reinit);
+document.getElementById("rst").addEventListener("click", reinit);
+
+new ResizeObserver(() => {
+  const w = fig.clientWidth || 800, h = fig.clientHeight || 500;
+  renderer.setSize(w, h, false); dessiner();
+}).observe(fig);
+
+/* ---------- Boutons ---------- */
+const btn = document.getElementById("toggle");
+btn.addEventListener("click", () => {
+  const cache = panneau.classList.toggle("sans-panneau");
+  btn.textContent = cache ? "Masqués" : "Affichés";
+  btn.setAttribute("aria-expanded", String(!cache));
+});
+const bi = document.getElementById("inter");
+bi.addEventListener("click", () => { inter = !inter; bi.textContent = inter ? "Affichés" : "Masqués"; maj(); });
+
+const dp = document.createElement("div"); dp.className = "ctrl proj";
+dp.innerHTML = '<span>Projection :</span><button id="proj" type="button">Perspective</button>';
+panneau.insertBefore(dp, document.getElementById("res"));
+document.getElementById("proj").addEventListener("click", e => {
+  const o = camera === persp;
+  camera = o ? ortho : persp; camera.add(lum);
+  e.target.textContent = o ? "Orthographique" : "Perspective";
+  dessiner();
+});
+
+synchroniser();
+maj();
+</script>
+</body>
+</html>

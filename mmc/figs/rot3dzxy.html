@@ -11,12 +11,12 @@
   body{margin:0;min-height:100dvh;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--fg);background:#fff;
        display:flex;flex-direction:column;
        padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
-  header{display:flex;align-items:center;gap:.6rem;padding:.35rem .75rem;border-bottom:1px solid var(--line)}
-  header .titre{flex:1;min-width:0}
+  header{display:flex;flex-direction:column;align-items:stretch;gap:.25rem;padding:.35rem .75rem;border-bottom:1px solid var(--line)}
+  header .titre{min-width:0}
   h1{font-size:1.05rem;margin:0;line-height:1.2}
   header .sous{font-size:.78rem;color:var(--muted);line-height:1.25}
   header a{color:var(--accent)}
-  .ctl{display:flex;align-items:center;gap:.4rem;font-size:.85rem;white-space:nowrap;flex-wrap:wrap;justify-content:flex-end}
+  .ctl{display:flex;align-items:center;gap:.3rem .9rem;font-size:.85rem;white-space:nowrap;flex-wrap:wrap;justify-content:flex-start}
   .ctl .grp{display:flex;align-items:center;gap:.4rem}
   .ctl button,.ctrl button{min-width:4.6rem;font:inherit;font-size:.82rem;padding:.25rem .6rem;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--fg);cursor:pointer}
   .ctl button:hover{border-color:var(--accent)}
@@ -42,11 +42,10 @@
        background:rgba(255,255,255,.9);color:var(--fg);font-size:1.1rem;cursor:pointer}
   #rst:hover{border-color:var(--accent)}
   @media (max-width:600px){
-    header{display:grid;grid-template-columns:1fr auto;gap:0 .6rem;align-items:center;padding:.3rem .6rem}
-    header .titre{display:contents}
-    h1{grid-column:1/-1;font-size:.98rem}
-    header .sous{grid-column:1;font-size:.72rem}
-    .ctl{grid-column:2;grid-row:2}
+    header{padding:.3rem .6rem;gap:.2rem}
+    h1{font-size:.98rem}
+    header .sous{font-size:.72rem}
+    .ctl{font-size:.8rem}
     .barre{padding:.25rem .6rem}
     .res{font-size:.9rem;gap:0 .9rem}
   }
@@ -71,11 +70,7 @@
 
 <div id="fig"><button id="rst" type="button" aria-label="Réinitialiser la vue" title="Réinitialiser la vue">↺</button></div>
 
-<!--
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
--->
 <script src="../../js/three.min.js"></script>
-
 <script>
 document.getElementById("lien").href = "https://a-seghir.github.io/mmc/chap1.pdf";
 

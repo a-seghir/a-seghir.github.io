@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Rotations de repère combinées (3D) : R = Ry·Rx·Rz</title>
 <style>
-  :root{color-scheme:light;--fg:#1b1d21;--muted:#5b6068;--card:#f4f6f9;--line:#d3d8df;--accent:#0040d9}
+  :root{color-scheme:light;--bg:#fff;--fg:#1b1d21;--muted:#5b6068;--card:#f4f6f9;--line:#d3d8df;--accent:#0040d9}
+  :root[data-theme=dark]{color-scheme:dark;--bg:#14161a;--fg:#e6e8eb;--muted:#9aa1ab;--card:#1e2229;--line:#343a44;--accent:#6c9cff}
   *{box-sizing:border-box}
   html{margin:0}
-  body{margin:0;min-height:100dvh;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--fg);background:#fff;
+  body{margin:0;min-height:100dvh;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--fg);background:var(--bg);
        display:flex;flex-direction:column;
        padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
   header{display:flex;flex-direction:column;align-items:stretch;gap:.25rem;padding:.35rem .75rem;border-bottom:1px solid var(--line)}
@@ -24,22 +25,23 @@
   .ctrl{display:flex;align-items:center;gap:.4rem;flex:0 1 17rem;min-width:0}
   .ctrl label{width:2.2rem;font-family:"Times New Roman",Times,serif;font-style:italic;font-size:1rem;white-space:nowrap}
   .ctrl input[type=range]{flex:1;min-width:0;margin:0;height:1.3rem}
-  .ctrl input[type=number]{width:3.8rem;font:inherit;font-size:.82rem;padding:.1rem .25rem;border:1px solid var(--line);border-radius:6px}
-  .ctrl button{padding:.2rem .6rem;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--fg);cursor:pointer}
+  .ctrl input[type=number]{width:3.8rem;font:inherit;font-size:.82rem;padding:.1rem .25rem;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+  .ctrl button{padding:.2rem .6rem;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--fg);cursor:pointer}
   .ctrl button:hover{border-color:var(--accent)}
   .ctrl.proj{gap:.5rem;font-size:.85rem}
   .barre.sans-panneau .ctrl{display:none}
   .res{flex:1 1 22rem;display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.2rem;font-family:"Times New Roman",Times,serif;font-size:.98rem;line-height:1.45}
   .res span{white-space:nowrap}
   .res .rouge{color:#d62828}.res .vert{color:#2a9d2a}.res .bleu{color:#1f4fe0}
+  [data-theme=dark] .res .rouge{color:#ff6b6b}[data-theme=dark] .res .vert{color:#5fd65f}[data-theme=dark] .res .bleu{color:#7b9bff}
   #fig{position:relative;flex:1;min-width:0;min-height:300px;overflow:hidden}
   canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
   canvas:active{cursor:grabbing}
   .lab{position:absolute;left:0;top:0;pointer-events:none;white-space:nowrap;will-change:transform;
-       font-family:"Times New Roman","STIX Two Text",Times,serif;font-style:italic;font-size:18px;line-height:1;text-shadow:0 0 3px #fff,0 0 3px #fff}
+       font-family:"Times New Roman","STIX Two Text",Times,serif;font-style:italic;font-size:18px;line-height:1;text-shadow:0 0 3px var(--bg),0 0 3px var(--bg)}
   .lab sub{font-style:normal;font-weight:bold;font-size:.67em;vertical-align:baseline;position:relative;top:.3em}
   #rst{position:absolute;right:.5rem;bottom:.5rem;width:2rem;height:2rem;padding:0;border:1px solid var(--line);border-radius:8px;
-       background:rgba(255,255,255,.9);color:var(--fg);font-size:1.1rem;cursor:pointer}
+       background:var(--card);color:var(--fg);font-size:1.1rem;cursor:pointer}
   #rst:hover{border-color:var(--accent)}
   @media (max-width:600px){
     header{padding:.3rem .6rem;gap:.2rem}
@@ -61,7 +63,6 @@
       <a id="lien" href="#">figure du cours (PDF)</a></div>
   </div>
   <div class="ctl">
-    <span class="grp"><span>Repères intermédiaires :</span><button id="inter" type="button">Affichés</button></span>
     <span class="grp"><span>Paramètres :</span><button id="toggle" type="button" aria-expanded="true" aria-controls="panneau">Affichés</button></span>
   </div>
 </header>
@@ -70,7 +71,7 @@
 
 <div id="fig"><button id="rst" type="button" aria-label="Réinitialiser la vue" title="Réinitialiser la vue">↺</button></div>
 
-<script src="../../js/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 document.getElementById("lien").href = "https://a-seghir.github.io/mmc/chap1.pdf";
 
@@ -108,11 +109,17 @@ for (const k in champs){
   nb.addEventListener("change", synchroniser);
 }
 
+/* ---------- Thème clair / sombre ---------- */
+let dark = !!(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+document.documentElement.dataset.theme = dark ? "dark" : "light";
+const TH = {"#7a0f12":"#ff8a8a","#0d5c0d":"#7be07b","#12308f":"#8fa9ff","#111":"#f2f2f2","#888":"#bbb","#d62828":"#ff5d5d","#2a9d2a":"#4fd04f","#1f4fe0":"#5b86ff"};
+const T = c => (dark && TH[c]) || c;
+
 /* ---------- Scène ---------- */
 const fig = document.getElementById("fig");
 const renderer = new THREE.WebGLRenderer({ antialias:true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
-renderer.setClearColor(0xffffff, 1);
+renderer.setClearColor(dark ? 0x14161a : 0xffffff, 1);
 fig.insertBefore(renderer.domElement, fig.firstChild);
 const cv = renderer.domElement;
 const scene = new THREE.Scene();
@@ -123,7 +130,7 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.75));
 const lum = new THREE.DirectionalLight(0xffffff, 0.55); lum.position.set(0.4,0.3,1); camera.add(lum);
 
 const mats = {};
-const mat = (c,o=1) => mats[c+o] || (mats[c+o] = new THREE.MeshLambertMaterial({ color:c, transparent:o<1, opacity:o }));
+const mat = (c,o=1) => mats[c+o] || (mats[c+o] = Object.assign(new THREE.MeshLambertMaterial({ color:T(c), transparent:o<1, opacity:o }), { userData:{ c } }));
 const Y = new THREE.Vector3(0,1,0), V = (a,b,c) => new THREE.Vector3(a,b,c);
 
 function fleche(dir, len, col, r, hr, hl, o=1){
@@ -134,7 +141,7 @@ function fleche(dir, len, col, r, hr, hl, o=1){
 }
 const sphere = (p, col, r) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r,20,14), mat(col)); m.position.copy(p); return m; };
 const pointille = (a, b, col) => {
-  const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,b]), new THREE.LineDashedMaterial({ color:col, dashSize:0.14, gapSize:0.12 }));
+  const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,b]), new THREE.LineDashedMaterial({ color:T(col), dashSize:0.14, gapSize:0.12 }));
   l.computeLineDistances(); return l;
 };
 const vider = g => { while (g.children.length){ const o = g.children.pop();
@@ -156,18 +163,17 @@ function carre(plan){
 }
 
 /* Décor : grille du plan XY fixe, repère fixe */
-const grille = new THREE.GridHelper(14, 14, 0xc9ced6, 0xe4e7ec);
-grille.rotation.x = Math.PI/2; grille.position.z = -0.01; scene.add(grille);
+let grille;
+function faireGrille(){
+  if (grille){ scene.remove(grille); grille.geometry.dispose(); grille.material.dispose(); }
+  grille = dark ? new THREE.GridHelper(14, 14, 0x555b66, 0x2f343c) : new THREE.GridHelper(14, 14, 0xc9ced6, 0xe4e7ec);
+  grille.rotation.x = Math.PI/2; grille.position.z = -0.01; scene.add(grille);
+}
+faireGrille();
 scene.add(fleche(V(1,0,0), LEN, R, 0.045, 0.13, 0.4), fleche(V(0,1,0), LEN, G, 0.045, 0.13, 0.4), fleche(V(0,0,1), LEN, B, 0.045, 0.13, 0.4));
 scene.add(fleche(V(1,0,0), 2, Rd, 0.07, 0.16, 0.3), fleche(V(0,1,0), 2, Gd, 0.07, 0.16, 0.3), fleche(V(0,0,1), 2, Bd, 0.07, 0.16, 0.3));
 scene.add(sphere(V(0,0,0), "#111", 0.1));
 
-/* Repère intermédiaire 1 (après θ) : X₁, Y₁ */
-const I1 = new THREE.Group(); g1.add(I1);
-I1.add(fleche(V(1,0,0), LEN, Rc, 0.025, 0.09, 0.35, 0.6), fleche(V(0,1,0), LEN, Gc, 0.025, 0.09, 0.35, 0.6));
-/* Repère intermédiaire 2 (après φ) : Y₂, Z₂ */
-const I2 = new THREE.Group(); g2.add(I2);
-I2.add(fleche(V(0,1,0), LEN, Gc, 0.025, 0.09, 0.35, 0.6), fleche(V(0,0,1), LEN, Bc, 0.025, 0.09, 0.35, 0.6));
 /* Repère final (après ψ) : X′, Y′ (= Y₂), Z′ */
 g3.add(fleche(V(1,0,0), LEN, Rc, 0.035, 0.11, 0.4), fleche(V(0,1,0), LEN, Gc, 0.035, 0.11, 0.4), fleche(V(0,0,1), LEN, Bc, 0.035, 0.11, 0.4));
 g3.add(fleche(V(1,0,0), 2, Rc, 0.06, 0.14, 0.3), fleche(V(0,1,0), 2, Gc, 0.06, 0.14, 0.3), fleche(V(0,0,1), 2, Bc, 0.06, 0.14, 0.3));
@@ -195,9 +201,9 @@ function arc(pl, a0, a1, Rr){
 const labs = {};
 const sb = n => `<sub>${n}</sub>`;
 function lab(id, html, col, dx, dy, bold){
-  const el = document.createElement("div"); el.className = "lab"; el.innerHTML = html; el.style.color = col;
+  const el = document.createElement("div"); el.className = "lab"; el.innerHTML = html; el.style.color = T(col);
   if (bold) el.style.fontWeight = "bold";
-  fig.appendChild(el); return labs[id] = { el, p:V(0,0,0), dx, dy, on:true };
+  fig.appendChild(el); return labs[id] = { el, p:V(0,0,0), dx, dy, on:true, c:col };
 }
 lab("X","X",R,12,0).p.set(LEN,0,0);
 lab("Y","Y",G,10,-10).p.set(0,LEN,0);
@@ -208,7 +214,6 @@ lab("e2","e"+sb(2),Gd,-16,0,true).p.set(0,2,0);
 lab("e3","e"+sb(3),Bd,-18,0,true).p.set(0,0,2);
 lab("Xp","X′",Rt,12,-4); lab("Yp","Y′",Gt,12,-8); lab("Zp","Z′",Bt,14,-14);
 lab("e1p","e′"+sb(1),Rt,0,-16,true); lab("e2p","e′"+sb(2),Gt,-18,0,true); lab("e3p","e′"+sb(3),Bt,20,0,true);
-lab("X1","X"+sb(1),Rt,12,6); lab("Y1","Y"+sb(1),Gt,12,6); lab("Y2","Y"+sb(2),Gt,-14,-10); lab("Z2","Z"+sb(2),Bt,-14,-14);
 lab("P","P","#111",12,-10);
 lab("x","x",R,0,16); lab("y","y",G,-14,0); lab("z","z",B,-14,0);
 lab("xp","x′",Rt,10,16); lab("yp","y′",Gt,-16,6); lab("zp","z′",Bt,-16,6);
@@ -224,11 +229,9 @@ function majLabels(){
 }
 
 /* ---------- Calcul et mise à jour ---------- */
-let inter = true;
 function maj(){
   const { x, y, z } = etat, a = rad(etat.th), b = rad(etat.ph), g = rad(etat.ps);
   g1.rotation.z = a; g2.rotation.x = b; g3.rotation.y = g;
-  I1.visible = I2.visible = inter;
   scene.updateMatrixWorld(true);
   const M = g3.matrixWorld;
   const ex = V(0,0,0).setFromMatrixColumn(M,0), ey = V(0,0,0).setFromMatrixColumn(M,1), ez = V(0,0,0).setFromMatrixColumn(M,2);
@@ -251,8 +254,6 @@ function maj(){
   const W = (k, grp, v) => { labs[k].p.copy(v); grp.localToWorld(labs[k].p); };
   W("Xp",g3,V(LEN,0,0)); W("Yp",g3,V(0,LEN,0)); W("Zp",g3,V(0,0,LEN));
   W("e1p",g3,V(2,0,0)); W("e2p",g3,V(0,2,0)); W("e3p",g3,V(0,0,2));
-  W("X1",g1,V(LEN,0,0)); W("Y1",g1,V(0,LEN,0)); W("Y2",g2,V(0,LEN,0)); W("Z2",g2,V(0,0,LEN));
-  ["X1","Y1","Y2","Z2"].forEach(k => labs[k].on = inter);
   labs.P.p.copy(P); labs.x.p.copy(Px); labs.y.p.copy(Py); labs.z.p.copy(Pz);
   labs.xp.p.copy(Pxp); labs.yp.p.copy(Pyp); labs.zp.p.copy(Pzp);
 
@@ -312,12 +313,24 @@ btn.addEventListener("click", () => {
   btn.textContent = cache ? "Masqués" : "Affichés";
   btn.setAttribute("aria-expanded", String(!cache));
 });
-const bi = document.getElementById("inter");
-bi.addEventListener("click", () => { inter = !inter; bi.textContent = inter ? "Affichés" : "Masqués"; maj(); });
 
 const dp = document.createElement("div"); dp.className = "ctrl proj";
 dp.innerHTML = '<span>Projection :</span><button id="proj" type="button">Perspective</button>';
 panneau.insertBefore(dp, document.getElementById("res"));
+const dt = document.createElement("div"); dt.className = "ctrl proj";
+dt.innerHTML = '<span>Thème :</span><button id="theme" type="button"></button>';
+panneau.insertBefore(dt, document.getElementById("res"));
+const bt = document.getElementById("theme"); bt.textContent = dark ? "Sombre" : "Clair";
+bt.addEventListener("click", () => {
+  dark = !dark;
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  bt.textContent = dark ? "Sombre" : "Clair";
+  renderer.setClearColor(dark ? 0x14161a : 0xffffff, 1);
+  faireGrille();
+  for (const k in mats) mats[k].color.set(T(mats[k].userData.c));
+  for (const k in labs) labs[k].el.style.color = T(labs[k].c);
+  maj();
+});
 document.getElementById("proj").addEventListener("click", e => {
   const o = camera === persp;
   camera = o ? ortho : persp; camera.add(lum);

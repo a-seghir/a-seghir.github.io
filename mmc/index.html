@@ -1,20 +1,65 @@
-
-<div class="mmc-page">
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Cours de Mécanique des Milieux Continus — Abdelghani SEGHIR</title>
+  <meta name="description" content="Supports de cours, figures interactives, exercices corrigés et sujets d'examens en mécanique des milieux continus.">
+  <meta name="author" content="Abdelghani SEGHIR">
 
   <style>
+    :root {
+      color-scheme: light dark;
+    }
+
     .mmc-page {
+      --mmc-text: #263238;
+      --mmc-heading: #17365d;
+      --mmc-muted: #607080;
+      --mmc-border: #dce3eb;
+      --mmc-card: #ffffff;
+      --mmc-exams-bg: #f5f8fc;
+      --mmc-link: #1769aa;
+      --mmc-link-hover: #0b4778;
+      --mmc-button-bg: #ffffff;
+      --mmc-button-hover: #eaf2fb;
+      --mmc-focus: #1769aa;
+
       max-width: 950px;
       margin: 0 auto;
       padding: 20px;
       font-family: Arial, Helvetica, sans-serif;
       font-size: 16px;
       line-height: 1.7;
-      color: #263238;
+      color: var(--mmc-text);
+      background: transparent;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .mmc-page {
+        --mmc-text: #e2e8f0;
+        --mmc-heading: #a9c9f5;
+        --mmc-muted: #a7b4c5;
+        --mmc-border: #354456;
+        --mmc-card: #182332;
+        --mmc-exams-bg: #202d3d;
+        --mmc-link: #8fc7ff;
+        --mmc-link-hover: #c0e0ff;
+        --mmc-button-bg: #263649;
+        --mmc-button-hover: #344a61;
+        --mmc-focus: #8fc7ff;
+      }
+    }
+
+    .mmc-page,
+    .mmc-page * {
+      box-sizing: border-box;
     }
 
     .mmc-page h2 {
-      margin-bottom: 8px;
-      color: #17365d;
+      margin: 0 0 8px;
+      color: var(--mmc-heading);
       font-size: 30px;
       line-height: 1.3;
     }
@@ -22,24 +67,25 @@
     .mmc-page .intro {
       margin-top: 0;
       margin-bottom: 28px;
-      color: #607080;
+      color: var(--mmc-muted);
       font-size: 16px;
     }
 
     .mmc-page h3 {
       margin-top: 0;
       padding-bottom: 10px;
-      border-bottom: 2px solid #dce5ef;
-      color: #17365d;
+      border-bottom: 2px solid var(--mmc-border);
+      color: var(--mmc-heading);
       font-size: 22px;
+      line-height: 1.4;
     }
 
     .mmc-page .chapter {
       margin: 24px 0;
       padding: 22px;
-      border: 1px solid #dce3eb;
+      border: 1px solid var(--mmc-border);
       border-radius: 10px;
-      background: #ffffff;
+      background: var(--mmc-card);
     }
 
     .mmc-page .chapter h3 {
@@ -52,7 +98,7 @@
 
     .mmc-page .resource-group h4 {
       margin: 0 0 8px;
-      color: #374b63;
+      color: var(--mmc-heading);
       font-size: 16px;
     }
 
@@ -66,26 +112,34 @@
     }
 
     .mmc-page a {
-      color: #1769aa;
+      color: var(--mmc-link);
       text-decoration: none;
+      text-underline-offset: 3px;
+      overflow-wrap: anywhere;
     }
 
     .mmc-page a:hover {
-      color: #0b4778;
+      color: var(--mmc-link-hover);
       text-decoration: underline;
+    }
+
+    .mmc-page a:focus-visible {
+      outline: 2px solid var(--mmc-focus);
+      outline-offset: 3px;
+      border-radius: 3px;
     }
 
     .mmc-page .exams {
       margin-top: 32px;
       padding: 22px;
-      border: 1px solid #dce3eb;
+      border: 1px solid var(--mmc-border);
       border-radius: 10px;
-      background: #f5f8fc;
+      background: var(--mmc-exams-bg);
     }
 
     .mmc-page .exam-links {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(110px, 100%), 1fr));
       gap: 10px;
       margin-top: 16px;
     }
@@ -93,21 +147,21 @@
     .mmc-page .exam-links a {
       display: block;
       padding: 10px;
-      border: 1px solid #d5e0ec;
+      border: 1px solid var(--mmc-border);
       border-radius: 6px;
-      background: #ffffff;
+      background: var(--mmc-button-bg);
       text-align: center;
       font-weight: bold;
     }
 
     .mmc-page .exam-links a:hover {
-      background: #eaf2fb;
+      background: var(--mmc-button-hover);
       text-decoration: none;
     }
 
     .mmc-page .note {
       margin-top: 12px;
-      color: #657487;
+      color: var(--mmc-muted);
       font-size: 14px;
     }
 
@@ -121,202 +175,132 @@
         font-size: 25px;
       }
 
+      .mmc-page h3 {
+        font-size: 20px;
+      }
+
       .mmc-page .chapter,
       .mmc-page .exams {
         padding: 15px;
       }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      .mmc-page * {
+        scroll-behavior: auto;
+      }
+    }
   </style>
+</head>
 
-  <header>
-    <h2>Cours de Mécanique des Milieux Continus</h2>
-    <p class="intro">
-      Supports de cours, figures interactives, exercices corrigés
-      et sujets d’examens.
-    </p>
-  </header>
+<body>
+  <main class="mmc-page">
+    <header>
+      <h2>Cours de Mécanique des Milieux Continus</h2>
+      <p class="intro">
+        Supports de cours, figures interactives, exercices corrigés
+        et sujets d’examens.
+      </p>
+    </header>
 
-  <section class="chapter">
-    <h3>1. Introduction et rappels de mathématiques</h3>
+    <section class="chapter" aria-labelledby="chapitre-1">
+      <h3 id="chapitre-1">1. Introduction et rappels de mathématiques</h3>
 
-    <div class="resource-group">
-      <h4>📘 Support de cours</h4>
-      <ul>
-        <li>
-          <a href="https://drive.google.com/file/d/1OfoxXnXvb9hdpLn7Ptwk3I3l1wsln23o/view?usp=sharing"
-             target="_blank" rel="noopener noreferrer">
-            Télécharger ou consulter le cours en PDF
-          </a>
-        </li>
-      </ul>
-    </div>
+      <div class="resource-group">
+        <h4>📘 Support de cours</h4>
+        <ul>
+          <li>
+            <a href="https://drive.google.com/file/d/1OfoxXnXvb9hdpLn7Ptwk3I3l1wsln23o/view?usp=sharing"
+               target="_blank" rel="noopener noreferrer">
+              Télécharger ou consulter le cours en PDF
+            </a>
+          </li>
+        </ul>
+      </div>
 
-    <div class="resource-group">
-      <h4>📐 Figures interactives</h4>
-      <ul>
-        <li>
-          <a href="https://a-seghir.github.io/mmc/figs/vecteur3d.html"
-             target="_blank" rel="noopener noreferrer">
-            Vecteur en 3D
-          </a>
-        </li>
-        <li>
-          <a href="https://a-seghir.github.io/mmc/figs/rot2d.html"
-             target="_blank" rel="noopener noreferrer">
-            Rotation en 2D
-          </a>
-        </li>
-        <li>
-          <a href="https://a-seghir.github.io/mmc/figs/rot3dzxy.html"
-             target="_blank" rel="noopener noreferrer">
-            Rotation en 3D : Rz, Rx, Ry
-          </a>
-        </li>
-        <li>
-          <a href="https://a-seghir.github.io/mmc/figs/rot3dzyx.html"
-             target="_blank" rel="noopener noreferrer">
-            Rotation en 3D : Rz, Ry, Rx
-          </a>
-        </li>
-      </ul>
-    </div>
+      <div class="resource-group">
+        <h4>📐 Figures interactives</h4>
+        <ul>
+          <li><a href="https://a-seghir.github.io/mmc/figs/vecteur3d.html" target="_blank" rel="noopener noreferrer">Vecteur en 3D</a></li>
+          <li><a href="https://a-seghir.github.io/mmc/figs/rot2d.html" target="_blank" rel="noopener noreferrer">Rotation en 2D</a></li>
+          <li><a href="https://a-seghir.github.io/mmc/figs/rot3dzxy.html" target="_blank" rel="noopener noreferrer">Rotation en 3D : Rz, Rx, Ry</a></li>
+          <li><a href="https://a-seghir.github.io/mmc/figs/rot3dzyx.html" target="_blank" rel="noopener noreferrer">Rotation en 3D : Rz, Ry, Rx</a></li>
+        </ul>
+      </div>
 
-    <div class="resource-group">
-      <h4>✏️ Exercices</h4>
-      <ul>
-        <li>
-          <a href="https://drive.google.com/open?id=0B7bSV4fJWKCITzByVDR0U2F6eEU&amp;authuser=0"
-             target="_blank" rel="noopener noreferrer">
-            Série d’exercices n° 1
-          </a>
-        </li>
-        <li>
-          <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIaHVOMURfYjU0VzA&amp;authuser=0"
-             target="_blank" rel="noopener noreferrer">
-            Exercices résolus
-          </a>
-        </li>
-      </ul>
-    </div>
-  </section>
+      <div class="resource-group">
+        <h4>✏️ Exercices</h4>
+        <ul>
+          <li><a href="https://drive.google.com/open?id=0B7bSV4fJWKCITzByVDR0U2F6eEU&amp;authuser=0" target="_blank" rel="noopener noreferrer">Série d’exercices n° 1</a></li>
+          <li><a href="https://drive.google.com/open?id=0B7bSV4fJWKCIaHVOMURfYjU0VzA&amp;authuser=0" target="_blank" rel="noopener noreferrer">Exercices résolus</a></li>
+        </ul>
+      </div>
+    </section>
 
-  <section class="chapter">
-    <h3>2. État des contraintes en un point — Tenseur des contraintes</h3>
+    <section class="chapter" aria-labelledby="chapitre-2">
+      <h3 id="chapitre-2">2. État des contraintes en un point — Tenseur des contraintes</h3>
 
-    <div class="resource-group">
-      <h4>📘 Support de cours</h4>
-      <ul>
-        <li>
-          <a href="https://drive.google.com/file/d/1b9bU4uLE_PB79Lv-Yha79p8dH2zC_oBN/view?usp=sharing"
-             target="_blank" rel="noopener noreferrer">
-            Chapitre 2 — Version brouillon
-          </a>
-        </li>
-      </ul>
-    </div>
+      <div class="resource-group">
+        <h4>📘 Support de cours</h4>
+        <ul>
+          <li><a href="https://drive.google.com/file/d/1b9bU4uLE_PB79Lv-Yha79p8dH2zC_oBN/view?usp=sharing" target="_blank" rel="noopener noreferrer">Chapitre 2 — Version brouillon</a></li>
+        </ul>
+      </div>
 
-    <div class="resource-group">
-      <h4>✏️ Exercices et applications</h4>
-      <ul>
-        <li>
-          <a href="https://drive.google.com/open?id=0B7bSV4fJWKCINGg0NW5NbXJreFE&amp;authuser=0"
-             target="_blank" rel="noopener noreferrer">
-            Série d’exercices n° 2
-          </a>
-        </li>
-        <li>
-          <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIam53NHJ5TjQ5dEU&amp;authuser=0"
-             target="_blank" rel="noopener noreferrer">
-            Exercices résolus
-          </a>
-        </li>
-        <li>
-          <a href="https://drive.google.com/file/d/1s9EA5BKPFIe6-3Nul7A9ebsr97wKC7eZ/view?usp=sharing"
-             target="_blank" rel="noopener noreferrer">
-            Exemple d’application : cercle de Mohr
-          </a>
-        </li>
-      </ul>
-    </div>
+      <div class="resource-group">
+        <h4>✏️ Exercices et applications</h4>
+        <ul>
+          <li><a href="https://drive.google.com/open?id=0B7bSV4fJWKCINGg0NW5NbXJreFE&amp;authuser=0" target="_blank" rel="noopener noreferrer">Série d’exercices n° 2</a></li>
+          <li><a href="https://drive.google.com/open?id=0B7bSV4fJWKCIam53NHJ5TjQ5dEU&amp;authuser=0" target="_blank" rel="noopener noreferrer">Exercices résolus</a></li>
+          <li><a href="https://drive.google.com/file/d/1s9EA5BKPFIe6-3Nul7A9ebsr97wKC7eZ/view?usp=sharing" target="_blank" rel="noopener noreferrer">Exemple d’application : cercle de Mohr</a></li>
+        </ul>
+      </div>
 
-    <div class="resource-group">
-      <h4>📝 Examen</h4>
-      <ul>
-        <li>
-          <a href="https://drive.google.com/file/d/17ikQZbUU-AIx7Bn1RCPuyQXjg-j9f-di/view?usp=sharing"
-             target="_blank" rel="noopener noreferrer">
-            Examen 2016
-          </a>
-          —
-          <a href="https://drive.google.com/file/d/1WeeG426Rk6aCemclJtVMWMzop55eDUjl/view?usp=sharing"
-             target="_blank" rel="noopener noreferrer">
-            Solution détaillée
-          </a>
-        </li>
-      </ul>
-    </div>
-  </section>
+      <div class="resource-group">
+        <h4>📝 Examen</h4>
+        <ul>
+          <li>
+            <a href="https://drive.google.com/file/d/17ikQZbUU-AIx7Bn1RCPuyQXjg-j9f-di/view?usp=sharing" target="_blank" rel="noopener noreferrer">Examen 2016</a>
+            —
+            <a href="https://drive.google.com/file/d/1WeeG426Rk6aCemclJtVMWMzop55eDUjl/view?usp=sharing" target="_blank" rel="noopener noreferrer">Solution détaillée</a>
+          </li>
+        </ul>
+      </div>
+    </section>
 
-  <section class="chapter">
-    <h3>3. État des déformations en un point</h3>
+    <section class="chapter" aria-labelledby="chapitre-3">
+      <h3 id="chapitre-3">3. État des déformations en un point</h3>
 
-    <div class="resource-group">
-      <h4>✏️ Exercices</h4>
-      <ul>
-        <li>
-          <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIcHRlNFhDdlp0cTg&amp;authuser=0"
-             target="_blank" rel="noopener noreferrer">
-            Série d’exercices n° 3
-          </a>
-        </li>
-        <li>
-          <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIcjF6NU44bGphaEU&amp;authuser=0"
-             target="_blank" rel="noopener noreferrer">
-            Exercices résolus
-          </a>
-        </li>
-      </ul>
-    </div>
-  </section>
+      <div class="resource-group">
+        <h4>✏️ Exercices</h4>
+        <ul>
+          <li><a href="https://drive.google.com/open?id=0B7bSV4fJWKCIcHRlNFhDdlp0cTg&amp;authuser=0" target="_blank" rel="noopener noreferrer">Série d’exercices n° 3</a></li>
+          <li><a href="https://drive.google.com/open?id=0B7bSV4fJWKCIcjF6NU44bGphaEU&amp;authuser=0" target="_blank" rel="noopener noreferrer">Exercices résolus</a></li>
+        </ul>
+      </div>
+    </section>
 
-  <section class="exams">
-    <h3>Quelques sujets d’examens</h3>
+    <section class="exams" aria-labelledby="sujets-examens">
+      <h3 id="sujets-examens">Quelques sujets d’examens</h3>
 
-    <p>
-      Retrouvez ci-dessous les archives des sujets d’examens
-      classées par année.
-    </p>
+      <p>Retrouvez ci-dessous les archives des sujets d’examens classées par année.</p>
 
-    <div class="exam-links">
-      <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIQ2kzbkFlQXJ6LTg&amp;authuser=0"
-         target="_blank" rel="noopener noreferrer">2003.zip</a>
+      <div class="exam-links">
+        <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIQ2kzbkFlQXJ6LTg&amp;authuser=0" target="_blank" rel="noopener noreferrer">2003.zip</a>
+        <a href="https://drive.google.com/open?id=0B7bSV4fJWKCITXJGdGtOcEJTODQ&amp;authuser=0" target="_blank" rel="noopener noreferrer">2004.zip</a>
+        <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIOTlzLXJEelkxQ2s&amp;authuser=0" target="_blank" rel="noopener noreferrer">2006.zip</a>
+        <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIWkR5OGRIOEQtd1E&amp;authuser=0" target="_blank" rel="noopener noreferrer">2007.zip</a>
+        <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIdlA4c2hQbkd0c0k&amp;authuser=0" target="_blank" rel="noopener noreferrer">2008.zip</a>
+        <a href="https://drive.google.com/open?id=0B7bSV4fJWKCINXJnY3ozYXpLejQ&amp;authuser=0" target="_blank" rel="noopener noreferrer">2009.zip</a>
+        <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIUEVFampLWll5ZjQ&amp;authuser=0" target="_blank" rel="noopener noreferrer">2010.zip</a>
+        <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIek9scXNPOGlJd2s&amp;authuser=0" target="_blank" rel="noopener noreferrer">2011.zip</a>
+      </div>
 
-      <a href="https://drive.google.com/open?id=0B7bSV4fJWKCITXJGdGtOcEJTODQ&amp;authuser=0"
-         target="_blank" rel="noopener noreferrer">2004.zip</a>
-
-      <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIOTlzLXJEelkxQ2s&amp;authuser=0"
-         target="_blank" rel="noopener noreferrer">2006.zip</a>
-
-      <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIWkR5OGRIOEQtd1E&amp;authuser=0"
-         target="_blank" rel="noopener noreferrer">2007.zip</a>
-
-      <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIdlA4c2hQbkd0c0k&amp;authuser=0"
-         target="_blank" rel="noopener noreferrer">2008.zip</a>
-
-      <a href="https://drive.google.com/open?id=0B7bSV4fJWKCINXJnY3ozYXpLejQ&amp;authuser=0"
-         target="_blank" rel="noopener noreferrer">2009.zip</a>
-
-      <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIUEVFampLWll5ZjQ&amp;authuser=0"
-         target="_blank" rel="noopener noreferrer">2010.zip</a>
-
-      <a href="https://drive.google.com/open?id=0B7bSV4fJWKCIek9scXNPOGlJd2s&amp;authuser=0"
-         target="_blank" rel="noopener noreferrer">2011.zip</a>
-    </div>
-
-    <p class="note">
-      Les liens renvoient vers les fichiers hébergés sur Google Drive.
-      Leur disponibilité dépend des autorisations de partage.
-    </p>
-  </section>
-
-</div>
+      <p class="note">
+        Les liens renvoient vers les fichiers hébergés sur Google Drive.
+        Leur disponibilité dépend des autorisations de partage.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

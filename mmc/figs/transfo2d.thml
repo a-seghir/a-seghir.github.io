@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Transformation linéaire M = [5 −2 ; −2 2]</title>
+<style>
+:root{--bg:#f7f6f2;--fg:#1d1d1b;--muted:#6b6a64;--card:#fff;--line:#d9d7cf;--ghost:#c9c7be;--grid:#2a6df4;--e1:#e5484d;--e2:#2f9e5b;--eig:#b7791f;--e1d:#a8171d;--e2d:#16703f;--gridd:#1448b8;--eigd:#80510c;--gl:#a9c6f6;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171a;--fg:#ececea;--muted:#9a9990;--card:#202024;--line:#33333a;--ghost:#44444c;--grid:#6b9bff;--e1:#ff6b70;--e2:#4cc78a;--eig:#e8b04a;--e1d:#d63c42;--e2d:#2aa467;--gridd:#3f74e8;--eigd:#c48a1e;--gl:#3b5b96;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17171a;--fg:#ececea;--muted:#9a9990;--card:#202024;--line:#33333a;--ghost:#44444c;--grid:#6b9bff;--e1:#ff6b70;--e2:#4cc78a;--eig:#e8b04a;--e1d:#d63c42;--e2d:#2aa467;--gridd:#3f74e8;--eigd:#c48a1e;--gl:#3b5b96;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px}
+main{max-width:760px;margin:0 auto}
+h1{font-size:1.3rem;margin:0 0 4px}
+p.sub{margin:0 0 14px;color:var(--muted);font-size:.92rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+canvas{width:100%;aspect-ratio:1/1;display:block;border-radius:8px}
+.ctrl{margin-top:14px;display:grid;gap:10px}
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+input[type=range]{flex:1;min-width:160px;accent-color:var(--grid)}
+.val{font-variant-numeric:tabular-nums;font-weight:600;min-width:4.5em}
+select,button{font:inherit;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
+.info{display:flex;gap:20px;align-items:center;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.mat{display:inline-grid;grid-template-columns:auto auto;gap:2px 14px;padding:4px 12px;border-left:2px solid var(--fg);border-right:2px solid var(--fg);border-radius:4px;text-align:right}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.leg i{display:inline-block;width:14px;height:3px;margin-right:6px;vertical-align:middle;border-radius:2px}
+</style>
+</head>
+<body>
+<main>
+<h1>Transformation linéaire</h1>
+<p class="sub">Déformation du plan par M = [5 −2 ; −2 2] : Valeurs propres [1,6], Directions propres [1,2], [2,−1]</p>
+<div class="card">
+<canvas id="c"></canvas>
+<div class="ctrl">
+<div class="row"><label for="a">α</label><input id="a" type="range" min="0" max="1" step="0.005" value="0.5"><span class="val" id="av">0,50</span></div>
+<div class="row"><b>X′ = ((1 − α)·I + α·M)·X</b>
+
+<button id="play">▶ Animer</button><label><input type="checkbox" id="eig"> directions propres</label><label><input type="checkbox" id="ini"> grille initiale</label><button id="theme">◐ Clair / Sombre</button></div>
+<div class="info"><div>Matrice appliquée :</div><div class="mat" id="mat"></div><div id="det"></div></div>
+<div id="vecs" class="info" style="display:grid;gap:2px;font-size:.9rem"></div>
+<div class="leg"><span><i style="background:var(--gl)"></i>grille déformée</span><span><i style="background:var(--ghost)"></i>grille initiale</span><span>flèches pâles : vecteurs V, T, P</span><span>flèches vives : images W, U, Q</span></div>
+</div>
+</div>
+</main>
+<script>
+const M=[[5,-2],[-2,2]], R=13, N=40;
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const A=document.getElementById('a'),AV=document.getElementById('av'),MODE={value:'interp'},INI=document.getElementById('ini'),THEME=document.getElementById('theme'),PLAY=document.getElementById('play'),EIG=document.getElementById('eig'),Z={value:1};
+let size=0;
+function resize(){const d=window.devicePixelRatio||1,w=cv.clientWidth;size=w;cv.width=w*d;cv.height=w*d;ctx.setTransform(d,0,0,d,0,0);draw()}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+function mat(al){
+  if(MODE.value==='scale')return [[al*M[0][0],al*M[0][1]],[al*M[1][0],al*M[1][1]]];
+  return [[(1-al)+al*M[0][0],al*M[0][1]],[al*M[1][0],(1-al)+al*M[1][1]]];
+}
+function draw(){
+  const al=parseFloat(A.value),T=mat(al),s=size/(2*R)*parseFloat(Z.value),c=size/2;
+  const P=(x,y)=>[c+x*s,c-y*s];
+  const ap=(x,y)=>P(T[0][0]*x+T[0][1]*y,T[1][0]*x+T[1][1]*y);
+  ctx.clearRect(0,0,size,size);
+  // axes fixes
+  ctx.lineWidth=2;ctx.strokeStyle=css('--fg');ctx.beginPath();
+  ctx.moveTo(0,c);ctx.lineTo(size,c);ctx.moveTo(c,0);ctx.lineTo(c,size);ctx.stroke();
+  ctx.fillStyle=css('--fg');ctx.font='italic bold 17px system-ui';ctx.fillText('x',size-18,c-9);ctx.fillText('y',c+9,20);
+  // directions propres
+  if(EIG.checked){ctx.setLineDash([6,5]);ctx.strokeStyle=css('--eig');ctx.lineWidth=1.5;ctx.globalAlpha=.8;ctx.beginPath();
+  for(const [x,y] of [[1,2],[2,-1]]){const a=P(-R*2*x,-R*2*y),b=P(R*2*x,R*2*y);ctx.moveTo(...a);ctx.lineTo(...b)}
+  ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1}
+  const lines=[];for(let k=-N;k<=N;k+=1){lines.push([[k,-N],[k,N]],[[-N,k],[N,k]])}
+  // grille unique (grise), déformée par la transformation
+  ctx.strokeStyle=css('--ghost');ctx.lineWidth=.8;
+  if(INI.checked){ctx.beginPath();for(const [a,b] of lines){ctx.moveTo(...P(...a));ctx.lineTo(...P(...b))}ctx.stroke()}
+  ctx.strokeStyle=css('--gl');
+  ctx.lineWidth=.8;ctx.globalAlpha=1;ctx.beginPath();
+  for(const [a,b] of lines){ctx.moveTo(...ap(...a));ctx.lineTo(...ap(...b))}
+  ctx.stroke();
+  ctx.globalAlpha=1;
+  // images de e1 et e2
+  const arrow=(to,col,lw=3.5)=>{const o=P(0,0);ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(...o);ctx.lineTo(...to);ctx.stroke();
+    const ang=Math.atan2(to[1]-o[1],to[0]-o[0]);ctx.beginPath();ctx.moveTo(...to);ctx.lineTo(to[0]-13*Math.cos(ang-.4),to[1]-13*Math.sin(ang-.4));ctx.lineTo(to[0]-13*Math.cos(ang+.4),to[1]-13*Math.sin(ang+.4));ctx.fill()};
+  const vecs=[['V','W',1,1,'--e1'],['T','U',-2,1,'--e2'],['P','Q',1,2,'--grid'],['R','S',0,-2,'--eig']];
+  ctx.font='bold 15px system-ui';
+  for(const [n,m,x,y,col] of vecs){
+    const v=P(x,y);arrow(v,css(col+'d'),3);
+    ctx.fillStyle=css(col+'d');ctx.fillText(n,v[0]+8,v[1]+(n==='T'?2:16));
+  }
+  for(const [n,m,x,y,col] of vecs){
+    const w=ap(x,y);arrow(w,css(col),3.5);ctx.fillStyle=css(col);ctx.fillText(m,w[0]+8,w[1]-8);
+  }
+  // infos
+  AV.textContent=al.toFixed(2).replace('.',',');
+  const f=v=>(Math.round(v*100)/100).toString().replace('.',',').replace('-','−');
+  document.getElementById('mat').innerHTML=`<span>${f(T[0][0])}</span><span>${f(T[0][1])}</span><span>${f(T[1][0])}</span><span>${f(T[1][1])}</span>`;
+  document.getElementById('det').textContent='det = '+f(T[0][0]*T[1][1]-T[0][1]*T[1][0]);
+  document.getElementById('vecs').innerHTML=vecs.map(([n,m,x,y,col])=>`<div><b style="color:var(${col})">${m}</b> = M·${n}, ${n} = (${f(x)} ; ${f(y)}) → ${m} = (${f(T[0][0]*x+T[0][1]*y)} ; ${f(T[1][0]*x+T[1][1]*y)})</div>`).join('');
+}
+let raf=null,dir=1;
+function step(){let v=parseFloat(A.value)+dir*0.004;if(v>=1){v=1;dir=-1}if(v<=0){v=0;dir=1}A.value=v;draw();raf=requestAnimationFrame(step)}
+PLAY.onclick=()=>{if(raf){cancelAnimationFrame(raf);raf=null;PLAY.textContent='▶ Animer'}else{PLAY.textContent='⏸ Pause';raf=requestAnimationFrame(step)}};
+A.addEventListener('input',draw);
+const clampZ=v=>Math.min(6,Math.max(.5,v));
+cv.style.touchAction='none';
+cv.addEventListener('wheel',e=>{e.preventDefault();Z.value=clampZ(Z.value*Math.exp(-e.deltaY*0.0015));draw()},{passive:false});
+cv.addEventListener('dblclick',()=>{Z.value=1;draw()});
+const pts=new Map();let d0=0,z0=1;
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,[e.clientX,e.clientY]);if(pts.size===2){const [a,b]=[...pts.values()];d0=Math.hypot(a[0]-b[0],a[1]-b[1]);z0=Z.value}});
+cv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,[e.clientX,e.clientY]);if(pts.size===2&&d0>0){const [a,b]=[...pts.values()];Z.value=clampZ(z0*Math.hypot(a[0]-b[0],a[1]-b[1])/d0);draw()}});
+const up=e=>{pts.delete(e.pointerId);d0=0};
+cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);EIG.addEventListener('change',draw);INI.addEventListener('change',draw);
+THEME.onclick=()=>{const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.theme=dark?'light':'dark';draw()};
+window.addEventListener('resize',resize);
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',draw);
+resize();
+</script>
+</body>
+</html>
